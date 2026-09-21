@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ArrowDown, ArrowLeftRight, ArrowUp, ArrowUpRight, Award, Bell, Bookmark, BriefcaseBusiness, CalendarDays, Check, CheckCircle2, ChevronDown, Clock3, Eye, EyeOff, Languages, Menu, MessageCircle, Moon, Search, Settings, ShieldCheck, Sparkles, Star, Sun, Target, Repeat2, UserRound, UsersRound, Video, X, XCircle } from 'lucide-react';
-import { blockUser, changePassword, createProfile, createVideoRoom, deleteAccount, forgotPassword, getGroups, getLeaderboard, getMessages, getNotifications, getRecommendations, getSkillMatches, getSkills, joinGroup, loginProfile, markMessageRead, markNotificationsRead, reportUser, scheduleExchange, sendMessage, sendVerification, updatePortfolio, updateProfile, verifyEmail } from './api';
+import { blockUser, changePassword, createProfile, createVideoRoom, deleteAccount, forgotPassword, getGroups, getLeaderboard, getMessages, getNotifications, getRecommendations, getSkillMatches, getSkills, joinGroup, loginProfile, markMessageRead, markNotificationsRead, reportUser, resetPassword, scheduleExchange, sendMessage, sendVerification, updatePortfolio, updateProfile, verifyEmail } from './api';
 import { connectChat } from './socket';
 
 const categories = ['All', 'Technology', 'Creative', 'Food & home', 'Wellbeing'];
@@ -143,10 +143,12 @@ function App() {
   };
 
   const verificationToken = new URLSearchParams(window.location.search).get('verify');
+  const resetToken = new URLSearchParams(window.location.search).get('reset');
   if (verificationToken) return <VerificationGate token={verificationToken} />;
+  if (resetToken) return <ResetPasswordGate token={resetToken} />;
   if (!currentUser) return <AuthGate onLogin={(user) => { setCurrentUser(user); localStorage.setItem('skillswap-user', JSON.stringify(user)); }} />;
 
-  return <div className={darkMode ? 'app-shell dark-mode' : 'app-shell'}>
+  return <><div className={darkMode ? 'app-shell dark-mode' : 'app-shell'}>
     <header className="site-header">
       <a className="brand" href="#top" onClick={() => scrollTo('top')}><span className="brand-mark"><ArrowLeftRight size={17} strokeWidth={2.4} /></span> skillswap</a>
       <button className="menu-toggle" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Toggle navigation">{mobileOpen ? <X size={20} /> : <Menu size={20} />}</button>
@@ -192,7 +194,7 @@ function App() {
     {toast && <div className="toast" role="status"><Check size={15} /> {toast}</div>}
     {activeModal === 'account-advanced' && <AdvancedPanel user={currentUser} onClose={() => setActiveModal(null)} onSaved={(user) => { setCurrentUser(user); localStorage.setItem('skillswap-user', JSON.stringify(user)); }} />}
     {activeModal && (activeModal === 'account-edit' ? <EditProfilePanelEnhanced user={currentUser} onClose={() => setActiveModal(null)} onSaved={(user) => { setCurrentUser(user); localStorage.setItem('skillswap-user', JSON.stringify(user)); setActiveModal('account-profile'); }} /> : activeModal === 'account-community' ? <CommunityPanel user={currentUser} onClose={() => setActiveModal(null)} /> : activeModal === 'account-password' ? <PasswordPanel email={currentUser?.email} onClose={() => setActiveModal(null)} /> : activeModal === 'account-safety' ? <SafetyPanel user={currentUser} onClose={() => setActiveModal(null)} onDeleted={() => { localStorage.removeItem('skillswap-user'); setCurrentUser(null); setActiveModal(null); }} /> : activeModal === 'account-exchanges' ? <ExchangesPanel user={currentUser} onClose={() => setActiveModal(null)} /> : activeModal === 'account-messages' ? <MessagesPanel user={currentUser} onClose={() => setActiveModal(null)} /> : activeModal === 'account-saved' ? <SavedSkillsPanel skills={allSkills} savedSkills={savedSkills} onToggle={toggleSavedSkill} onConnect={openMessage} onClose={() => setActiveModal(null)} /> : activeModal === 'account-settings' ? <SettingsPanel darkMode={darkMode} setDarkMode={setDarkMode} accent={accent} setAccent={setAccent} language={language} setLanguage={setLanguage} onPassword={() => setActiveModal('account-password')} onClose={() => setActiveModal(null)} /> : activeModal.startsWith('account-') ? <AccountPanelEnhanced section={activeModal.replace('account-', '')} user={currentUser} onClose={() => setActiveModal(null)} onEdit={() => setActiveModal('account-edit')} /> : <Modal type={activeModal} recipient={messageRecipient} sender={currentUser} onClose={() => { setActiveModal(null); setStatus(''); }} status={status} setStatus={setStatus} onLogin={(user) => { setCurrentUser(user); localStorage.setItem('skillswap-user', JSON.stringify(user)); }} />)}
-  </div>;
+  </div></>;
 }
 
 function AuthGate({ onLogin }) {
@@ -201,15 +203,19 @@ function AuthGate({ onLogin }) {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
   const switchMode = (nextMode) => { setMode(nextMode); setForm({ name: '', email: '', password: '', teaches: '', wants: '' }); setError(''); };
   const requestReset = async () => {
-    if (!form.email) { setError('Enter your email address first.'); return; }
+    if (!resetEmail.trim()) return;
     setError('');
     setNotice('');
     setLoading(true);
     try {
-      const result = await forgotPassword(form.email);
+      const result = await forgotPassword(resetEmail.trim());
       setNotice(result.developmentToken ? `${result.message} Development token: ${result.developmentToken}` : result.message);
+      setResetOpen(false);
+      setResetEmail('');
     } catch (requestError) {
       setError(requestError.message || 'Could not start password reset.');
     } finally {
@@ -237,13 +243,21 @@ function AuthGate({ onLogin }) {
       setLoading(false);
     }
   };
-  return <div className="auth-gate"><div className="auth-panel"><div className="auth-brand"><span className="brand-mark"><ArrowLeftRight size={17} strokeWidth={2.4} /></span><strong>skillswap</strong></div><div className="auth-layout"><div className="auth-intro"><div className="eyebrow"><Sparkles size={14} /> skills worth sharing</div><h1>Trade what you know.<br /><em>Grow together.</em></h1><p>Join a community where every useful skill can become someone else’s next chapter.</p><div className="auth-proof"><span>2,400+</span><small>good exchanges already moving</small></div></div><div className="auth-card"><div className="auth-tabs"><button type="button" className={mode === 'login' ? 'active' : ''} onClick={() => switchMode('login')}>Log in</button><button type="button" className={mode === 'signup' ? 'active' : ''} onClick={() => switchMode('signup')}>Sign in</button></div><div className="eyebrow">{mode === 'login' ? 'welcome back' : 'make your move'}</div><h2>{mode === 'login' ? 'Log in to SkillSwap.' : 'Create your profile.'}</h2><p>{mode === 'login' ? 'Pick up where your next good exchange left off.' : 'Put one skill on the table and meet your next exchange partner.'}</p><form onSubmit={submit}>{mode === 'signup' && <input required placeholder="Your name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />}<input required type="email" placeholder="Email address" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /><PasswordInput required minLength={mode === 'signup' ? 8 : undefined} placeholder={mode === 'signup' ? 'Password (8+ characters)' : 'Password'} value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} />{mode === 'signup' && <><input placeholder="What can you teach?" value={form.teaches} onChange={(event) => setForm({ ...form, teaches: event.target.value })} /><input placeholder="What do you want to learn?" value={form.wants} onChange={(event) => setForm({ ...form, wants: event.target.value })} /></>}{error && <p className="auth-error" role="alert">{error}</p>}{notice && <p className="auth-notice" role="status">{notice}</p>}<button className="button button-dark auth-submit" type="submit" disabled={loading}>{loading ? 'Please wait...' : mode === 'login' ? 'Log in' : 'Create profile'} <ArrowUpRight size={16} /></button></form>{mode === 'login' && <button type="button" className="forgot-password-link" onClick={requestReset} disabled={loading}>Forgot password?</button>}<small className="auth-privacy">Your profile stays yours. No money, no pressure, just useful exchanges.</small></div></div></div></div>;
+  return <><div className="auth-gate"><div className="auth-panel"><div className="auth-brand"><span className="brand-mark"><ArrowLeftRight size={17} strokeWidth={2.4} /></span><strong>skillswap</strong></div><div className="auth-layout"><div className="auth-intro"><div className="eyebrow"><Sparkles size={14} /> skills worth sharing</div><h1>Trade what you know.<br /><em>Grow together.</em></h1><p>Join a community where every useful skill can become someone else’s next chapter.</p><div className="auth-proof"><span>2,400+</span><small>good exchanges already moving</small></div></div><div className="auth-card"><div className="auth-tabs"><button type="button" className={mode === 'login' ? 'active' : ''} onClick={() => switchMode('login')}>Log in</button><button type="button" className={mode === 'signup' ? 'active' : ''} onClick={() => switchMode('signup')}>Sign in</button></div><div className="eyebrow">{mode === 'login' ? 'welcome back' : 'make your move'}</div><h2>{mode === 'login' ? 'Log in to SkillSwap.' : 'Create your profile.'}</h2><p>{mode === 'login' ? 'Pick up where your next good exchange left off.' : 'Put one skill on the table and meet your next exchange partner.'}</p><form onSubmit={submit}>{mode === 'signup' && <input required placeholder="Your name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />}<input required type="email" placeholder="Email address" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /><PasswordInput required minLength={mode === 'signup' ? 8 : undefined} placeholder={mode === 'signup' ? 'Password (8+ characters)' : 'Password'} value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} />{mode === 'signup' && <><input placeholder="What can you teach?" value={form.teaches} onChange={(event) => setForm({ ...form, teaches: event.target.value })} /><input placeholder="What do you want to learn?" value={form.wants} onChange={(event) => setForm({ ...form, wants: event.target.value })} /></>}{error && <p className="auth-error" role="alert">{error}</p>}{notice && <p className="auth-notice" role="status">{notice}</p>}<button className="button button-dark auth-submit" type="submit" disabled={loading}>{loading ? 'Please wait...' : mode === 'login' ? 'Log in' : 'Create profile'} <ArrowUpRight size={16} /></button></form>{mode === 'login' && <button type="button" className="forgot-password-link" onClick={() => { setResetEmail(form.email); setResetOpen(true); setError(''); }} disabled={loading}>Forgot password?</button>}<small className="auth-privacy">Your profile stays yours. No money, no pressure, just useful exchanges.</small></div></div></div></div>{resetOpen && <div className="modal-backdrop reset-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setResetOpen(false)}><div className="modal-panel reset-panel"><button className="modal-close" type="button" onClick={() => setResetOpen(false)} aria-label="Close"><X size={19} /></button><div className="eyebrow">account recovery</div><h2>Reset your password.</h2><p>Enter your account email and we will send a secure reset link.</p><form onSubmit={(event) => { event.preventDefault(); requestReset(); }}><input required type="email" autoFocus placeholder="Email address" value={resetEmail} onChange={(event) => setResetEmail(event.target.value)} /><button className="button button-dark" type="submit" disabled={loading}>{loading ? 'Sending...' : 'Send reset link'} <ArrowUpRight size={16} /></button></form></div></div>}</>;
 }
 
 function VerificationGate({ token }) {
   const [status, setStatus] = useState('Verifying your email...');
   useEffect(() => { verifyEmail(token).then((result) => { setStatus(result.message); window.history.replaceState({}, '', window.location.pathname); }).catch((error) => setStatus(error.message)); }, [token]);
   return <div className="auth-gate"><div className="auth-card verification-card"><div className="account-panel-icon"><Check size={23} /></div><div className="eyebrow">email verification</div><h2>{status}</h2><p>Your SkillSwap account will be available after verification.</p><a className="button button-dark" href={window.location.pathname}>Continue to SkillSwap <ArrowUpRight size={16} /></a></div></div>;
+}
+
+function ResetPasswordGate({ token }) {
+  const [password, setPassword] = useState('');
+  const [status, setStatus] = useState('');
+  const [saving, setSaving] = useState(false);
+  const submit = async (event) => { event.preventDefault(); setSaving(true); setStatus(''); try { const result = await resetPassword({ token, newPassword: password }); setStatus(result.message); window.history.replaceState({}, '', window.location.pathname); } catch (error) { setStatus(error.message); } finally { setSaving(false); } };
+  return <div className="auth-gate"><div className="auth-card verification-card"><div className="account-panel-icon"><ShieldCheck size={23} /></div><div className="eyebrow">account recovery</div><h2>Choose a new password.</h2><p>Use at least 8 characters for your new SkillSwap password.</p><form onSubmit={submit}><PasswordInput required minLength={8} placeholder="New password (8+ characters)" value={password} onChange={(event) => setPassword(event.target.value)} /><button className="button button-dark auth-submit" type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save new password'} <Check size={16} /></button></form>{status && <p className="auth-notice" role="status">{status}</p>}</div></div>;
 }
 
 function PasswordInput({ value, onChange, ...props }) {

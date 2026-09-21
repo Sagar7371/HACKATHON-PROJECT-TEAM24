@@ -25,6 +25,15 @@ async function sendVerificationEmail(email, token) {
   await mailer.sendMail({ from: process.env.SMTP_FROM || process.env.SMTP_USER, to: email, subject: 'Verify your SkillSwap account', text: `Verify your SkillSwap account: ${verifyUrl}`, html: `<p>Welcome to SkillSwap.</p><p><a href="${verifyUrl}">Verify your email address</a> to activate your account.</p><p>This link expires in 24 hours.</p>` });
 }
 
+async function sendResetEmail(email, token) {
+  if (!mailer) {
+    if (process.env.NODE_ENV === 'production') throw new Error('Email service is not configured.');
+    return;
+  }
+  const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}?reset=${encodeURIComponent(token)}`;
+  await mailer.sendMail({ from: process.env.SMTP_FROM || process.env.SMTP_USER, to: email, subject: 'Reset your SkillSwap password', text: `Reset your SkillSwap password: ${resetUrl}`, html: `<p>We received a password reset request for your SkillSwap account.</p><p><a href="${resetUrl}">Reset your password</a></p><p>This link expires in 15 minutes.</p>` });
+}
+
 function createVerificationToken(email) {
   const token = `verify-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const tokens = readCollection('resetTokens.json').filter((item) => item.type !== 'verify' || item.expiresAt > Date.now());
@@ -296,13 +305,22 @@ router.post('/auth/change-password', async (request, response) => {
   return response.json({ message: 'Password changed successfully.' });
 });
 
-router.post('/auth/forgot-password', (request, response) => {
+router.post('/auth/forgot-password', async (request, response) => {
   const { email } = request.body;
   if (!email) return response.status(400).json({ message: 'Email is required.' });
   const token = `reset-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const tokens = readCollection('resetTokens.json').filter((item) => item.expiresAt > Date.now());
   writeCollection('resetTokens.json', [{ token, email: email.trim().toLowerCase(), expiresAt: Date.now() + 15 * 60 * 1000 }, ...tokens]);
-  return response.json({ message: 'If the account exists, reset instructions are ready.', developmentToken: process.env.NODE_ENV === 'production' ? undefined : token });
+  try {
+    if (process.env.MONGODB_URI) {
+      const profile = await Profile.findOne({ email: email.trim().toLowerCase() });
+      if (!profile) return response.json({ message: 'If the account exists, reset instructions are ready.' });
+    }
+    await sendResetEmail(email.trim().toLowerCase(), token);
+    return response.json({ message: 'If the account exists, reset instructions are ready.', developmentToken: process.env.NODE_ENV === 'production' || mailer ? undefined : token });
+  } catch (error) {
+    return response.status(503).json({ message: error.message || 'Email service is unavailable.' });
+  }
 });
 
 router.post('/auth/reset-password', async (request, response) => {
@@ -310,11 +328,18 @@ router.post('/auth/reset-password', async (request, response) => {
   const tokens = readCollection('resetTokens.json');
   const record = tokens.find((item) => item.token === token && item.expiresAt > Date.now());
   if (!record || !newPassword || newPassword.length < 8) return response.status(400).json({ message: 'Reset token is invalid or expired.' });
-  const profiles = readProfiles();
-  const index = profiles.findIndex((profile) => profile.email === record.email);
-  if (index === -1) return response.status(404).json({ message: 'Profile not found.' });
-  profiles[index].passwordHash = await bcrypt.hash(newPassword, 12);
-  writeProfiles(profiles);
+  if (process.env.MONGODB_URI) {
+    const profile = await Profile.findOne({ email: record.email });
+    if (!profile) return response.status(404).json({ message: 'Profile not found.' });
+    profile.passwordHash = await bcrypt.hash(newPassword, 12);
+    await profile.save();
+  } else {
+    const profiles = readProfiles();
+    const index = profiles.findIndex((profile) => profile.email === record.email);
+    if (index === -1) return response.status(404).json({ message: 'Profile not found.' });
+    profiles[index].passwordHash = await bcrypt.hash(newPassword, 12);
+    writeProfiles(profiles);
+  }
   writeCollection('resetTokens.json', tokens.filter((item) => item.token !== token));
   return response.json({ message: 'Password reset successfully.' });
 });
