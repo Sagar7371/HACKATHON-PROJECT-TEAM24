@@ -41,6 +41,8 @@ The client can be deployed to Vercel, Netlify, or Cloudflare Pages with `npm run
 
 A live deployment URL is intentionally not included because this workspace has no hosting credentials or deployment target configured.
 
+For a deployed app, set `MONGODB_URI` and `NODE_ENV=production` on the server, and set the client build variable `VITE_API_URL` to the deployed API URL ending in `/api`. Signup and login then use MongoDB profiles; production refuses to use the local JSON fallback for account authentication.
+
 ## Project layout
 
 - `client/` React/Vite frontend

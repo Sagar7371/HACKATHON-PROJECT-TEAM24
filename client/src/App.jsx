@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowDown, ArrowLeftRight, ArrowUp, ArrowUpRight, Award, Bell, Bookmark, BriefcaseBusiness, CalendarDays, Check, CheckCircle2, ChevronDown, Clock3, Languages, Menu, MessageCircle, Moon, Search, Settings, ShieldCheck, Sparkles, Star, Sun, Target, Repeat2, UserRound, UsersRound, Video, X, XCircle } from 'lucide-react';
+import { ArrowDown, ArrowLeftRight, ArrowUp, ArrowUpRight, Award, Bell, Bookmark, BriefcaseBusiness, CalendarDays, Check, CheckCircle2, ChevronDown, Clock3, Eye, EyeOff, Languages, Menu, MessageCircle, Moon, Search, Settings, ShieldCheck, Sparkles, Star, Sun, Target, Repeat2, UserRound, UsersRound, Video, X, XCircle } from 'lucide-react';
 import { blockUser, changePassword, createProfile, createVideoRoom, deleteAccount, forgotPassword, getGroups, getLeaderboard, getMessages, getNotifications, getRecommendations, getSkillMatches, getSkills, joinGroup, loginProfile, markMessageRead, markNotificationsRead, reportUser, scheduleExchange, sendMessage, sendVerification, updatePortfolio, updateProfile } from './api';
 import { connectChat } from './socket';
 
@@ -92,6 +92,7 @@ function App() {
   }, [activeModal, currentUser, language]);
 
   useEffect(() => {
+    if (!currentUser) return undefined;
     const fields = [...document.querySelectorAll('input[type="password"]')].map((input) => {
       const form = input.closest('form');
       const toggle = document.createElement('button');
@@ -103,7 +104,7 @@ function App() {
       input.classList.add('password-input');
       form.classList.add('password-form');
       form.insertBefore(toggle, input.nextSibling);
-      const position = () => { toggle.style.top = `${input.offsetTop + (input.offsetHeight / 2) - 14}px`; };
+      const position = () => { const field = input.closest('label') || input; toggle.style.top = `${field.offsetTop + (field.offsetHeight / 2) - 14}px`; };
       position();
       const update = () => {
         const visible = input.type === 'text';
@@ -116,7 +117,7 @@ function App() {
       return { input, form, toggle, position };
     });
     return () => fields.forEach(({ input, form, toggle, position }) => { toggle.remove(); input.classList.remove('password-input'); form.classList.remove('password-form'); window.removeEventListener('resize', position); });
-  }, [activeModal]);
+  }, [activeModal, currentUser]);
 
   useEffect(() => localStorage.setItem('skillswap-saved-skills', JSON.stringify(savedSkills)), [savedSkills]);
 
@@ -140,6 +141,8 @@ function App() {
     setMobileOpen(false);
     window.requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }));
   };
+
+  if (!currentUser) return <AuthGate onLogin={(user) => { setCurrentUser(user); localStorage.setItem('skillswap-user', JSON.stringify(user)); }} />;
 
   return <div className={darkMode ? 'app-shell dark-mode' : 'app-shell'}>
     <header className="site-header">
@@ -188,6 +191,38 @@ function App() {
     {activeModal === 'account-advanced' && <AdvancedPanel user={currentUser} onClose={() => setActiveModal(null)} onSaved={(user) => { setCurrentUser(user); localStorage.setItem('skillswap-user', JSON.stringify(user)); }} />}
     {activeModal && (activeModal === 'account-edit' ? <EditProfilePanelEnhanced user={currentUser} onClose={() => setActiveModal(null)} onSaved={(user) => { setCurrentUser(user); localStorage.setItem('skillswap-user', JSON.stringify(user)); setActiveModal('account-profile'); }} /> : activeModal === 'account-community' ? <CommunityPanel user={currentUser} onClose={() => setActiveModal(null)} /> : activeModal === 'account-password' ? <PasswordPanel email={currentUser?.email} onClose={() => setActiveModal(null)} /> : activeModal === 'account-safety' ? <SafetyPanel user={currentUser} onClose={() => setActiveModal(null)} onDeleted={() => { localStorage.removeItem('skillswap-user'); setCurrentUser(null); setActiveModal(null); }} /> : activeModal === 'account-exchanges' ? <ExchangesPanel user={currentUser} onClose={() => setActiveModal(null)} /> : activeModal === 'account-messages' ? <MessagesPanel user={currentUser} onClose={() => setActiveModal(null)} /> : activeModal === 'account-saved' ? <SavedSkillsPanel skills={allSkills} savedSkills={savedSkills} onToggle={toggleSavedSkill} onConnect={openMessage} onClose={() => setActiveModal(null)} /> : activeModal === 'account-settings' ? <SettingsPanel darkMode={darkMode} setDarkMode={setDarkMode} accent={accent} setAccent={setAccent} language={language} setLanguage={setLanguage} onPassword={() => setActiveModal('account-password')} onClose={() => setActiveModal(null)} /> : activeModal.startsWith('account-') ? <AccountPanelEnhanced section={activeModal.replace('account-', '')} user={currentUser} onClose={() => setActiveModal(null)} onEdit={() => setActiveModal('account-edit')} /> : <Modal type={activeModal} recipient={messageRecipient} sender={currentUser} onClose={() => { setActiveModal(null); setStatus(''); }} status={status} setStatus={setStatus} onLogin={(user) => { setCurrentUser(user); localStorage.setItem('skillswap-user', JSON.stringify(user)); }} />)}
   </div>;
+}
+
+function AuthGate({ onLogin }) {
+  const [mode, setMode] = useState('login');
+  const [form, setForm] = useState({ name: '', email: '', password: '', teaches: '', wants: '' });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const switchMode = (nextMode) => { setMode(nextMode); setForm({ name: '', email: '', password: '', teaches: '', wants: '' }); setError(''); };
+  const submit = async (event) => {
+    event.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      if (mode === 'signup') {
+        const profile = await createProfile({ ...form, teaches: form.teaches ? [form.teaches] : [], wants: form.wants ? [form.wants] : [] });
+        onLogin(profile);
+      } else {
+        const result = await loginProfile({ email: form.email, password: form.password });
+        onLogin(result.profile);
+      }
+    } catch (requestError) {
+      setError(requestError.message || 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+  return <div className="auth-gate"><div className="auth-panel"><div className="auth-brand"><span className="brand-mark"><ArrowLeftRight size={17} strokeWidth={2.4} /></span><strong>skillswap</strong></div><div className="auth-layout"><div className="auth-intro"><div className="eyebrow"><Sparkles size={14} /> skills worth sharing</div><h1>Trade what you know.<br /><em>Grow together.</em></h1><p>Join a community where every useful skill can become someone else’s next chapter.</p><div className="auth-proof"><span>2,400+</span><small>good exchanges already moving</small></div></div><div className="auth-card"><div className="auth-tabs"><button type="button" className={mode === 'login' ? 'active' : ''} onClick={() => switchMode('login')}>Log in</button><button type="button" className={mode === 'signup' ? 'active' : ''} onClick={() => switchMode('signup')}>Sign in</button></div><div className="eyebrow">{mode === 'login' ? 'welcome back' : 'make your move'}</div><h2>{mode === 'login' ? 'Log in to SkillSwap.' : 'Create your profile.'}</h2><p>{mode === 'login' ? 'Pick up where your next good exchange left off.' : 'Put one skill on the table and meet your next exchange partner.'}</p><form onSubmit={submit}>{mode === 'signup' && <input required placeholder="Your name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />}<input required type="email" placeholder="Email address" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /><PasswordInput required minLength={mode === 'signup' ? 8 : undefined} placeholder={mode === 'signup' ? 'Password (8+ characters)' : 'Password'} value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} />{mode === 'signup' && <><input placeholder="What can you teach?" value={form.teaches} onChange={(event) => setForm({ ...form, teaches: event.target.value })} /><input placeholder="What do you want to learn?" value={form.wants} onChange={(event) => setForm({ ...form, wants: event.target.value })} /></>}{error && <p className="auth-error" role="alert">{error}</p>}<button className="button button-dark auth-submit" type="submit" disabled={loading}>{loading ? 'Please wait...' : mode === 'login' ? 'Log in' : 'Create profile'} <ArrowUpRight size={16} /></button></form><small className="auth-privacy">Your profile stays yours. No money, no pressure, just useful exchanges.</small></div></div></div></div>;
+}
+
+function PasswordInput({ value, onChange, ...props }) {
+  const [visible, setVisible] = useState(false);
+  return <span className="password-input-shell"><input {...props} type={visible ? 'text' : 'password'} value={value} onChange={onChange} /><button type="button" className="password-icon-button" aria-label={visible ? 'Hide password' : 'Show password'} title={visible ? 'Hide password' : 'Show password'} onClick={() => setVisible((current) => !current)}>{visible ? <EyeOff size={17} /> : <Eye size={17} />}</button></span>;
 }
 
 function SkillCard({ skill, saved, onSave, onConnect }) { return <article className="skill-card"><div className="card-top" style={{ background: skill.color }}><span className="card-category">{skill.category}</span><button className="save-skill-button" onClick={onSave} aria-label={saved ? `Remove ${skill.title} from saved skills` : `Save ${skill.title}`} title={saved ? 'Remove saved skill' : 'Save skill'}><Bookmark size={16} fill={saved ? 'currentColor' : 'none'} /></button><button className="round-arrow" onClick={onConnect} aria-label={`Connect with ${skill.teacher.name}`}><ArrowUpRight size={18} /></button><div className="skill-glyph">{skill.title.charAt(0)}</div></div><div className="card-body"><div className="card-title-row"><h3>{skill.title}</h3><div className="rating"><Star size={13} fill="currentColor" /> {skill.teacher.rating}</div></div><p>{skill.description}</p><div className="card-meta"><span>{skill.level}</span><span>{skill.format}</span></div><div className="trade-row"><div className="teacher"><span className="tiny-avatar">{skill.teacher.avatar}</span><span><strong>{skill.teacher.name}</strong><small>{skill.teacher.role}</small></span></div><span className="trade-icon">↔</span><span className="wants">{skill.wants}</span></div></div></article>; }

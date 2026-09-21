@@ -13,6 +13,14 @@ import { readCollection, writeCollection } from './data/localCollections.js';
 const router = express.Router();
 let localSkills = seedSkills;
 
+function databaseRequired(response) {
+  if (process.env.NODE_ENV === 'production' && !process.env.MONGODB_URI) {
+    response.status(503).json({ message: 'Account service is not configured with MongoDB yet.' });
+    return true;
+  }
+  return false;
+}
+
 function publicProfile(profile) {
   const { passwordHash: _passwordHash, ...safeProfile } = profile.toObject ? profile.toObject() : profile;
   return safeProfile;
@@ -147,6 +155,7 @@ router.post('/skills', async (request, response) => {
 });
 
 router.post('/profiles', async (request, response) => {
+  if (databaseRequired(response)) return;
   const { name, email, password, teaches = [], wants = [] } = request.body;
   if (!name || !email || !password || password.length < 8) {
     return response.status(400).json({ message: 'Name, email and a password of at least 8 characters are required.' });
@@ -206,6 +215,7 @@ router.get('/admin/reports', (request, response) => {
 });
 
 router.post('/auth/login', async (request, response) => {
+  if (databaseRequired(response)) return;
   const { email, password } = request.body;
   if (!email || !password) return response.status(400).json({ message: 'Email and password are required.' });
   const normalizedEmail = email.trim().toLowerCase();
