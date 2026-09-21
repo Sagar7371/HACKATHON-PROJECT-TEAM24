@@ -197,20 +197,29 @@ router.post('/profiles', async (request, response) => {
       return response.status(409).json({ message: 'An account with this email already exists.' });
     }
     const created = { ...profileData, _id: `local-${Date.now()}`, createdAt: new Date().toISOString() };
-    writeProfiles([created, ...profiles]);
     const token = createVerificationToken(normalizedEmail);
-    await sendVerificationEmail(normalizedEmail, token);
+    try {
+      await sendVerificationEmail(normalizedEmail, token);
+    } catch (error) {
+      return response.status(503).json({ message: error.message || 'Email service is unavailable. Please try again later.' });
+    }
+    writeProfiles([created, ...profiles]);
     return response.status(201).json({ message: 'Account created. Check your email to verify it.', verificationRequired: true, email: created.email, developmentToken: mailer ? undefined : token });
   }
 
   try {
     const created = await Profile.create(profileData);
     const token = createVerificationToken(normalizedEmail);
-    await sendVerificationEmail(normalizedEmail, token);
+    try {
+      await sendVerificationEmail(normalizedEmail, token);
+    } catch (error) {
+      await Profile.deleteOne({ _id: created._id });
+      return response.status(503).json({ message: error.message || 'Email service is unavailable. Please try again later.' });
+    }
     return response.status(201).json({ message: 'Account created. Check your email to verify it.', verificationRequired: true, email: created.email });
   } catch (error) {
     if (error.code === 11000) return response.status(409).json({ message: 'An account with this email already exists.' });
-    throw error;
+    return response.status(500).json({ message: 'Could not create profile. Please try again.' });
   }
 });
 
