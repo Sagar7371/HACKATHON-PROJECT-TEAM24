@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:5000/api');
 
 async function readResponse(response, fallbackMessage) {
   const contentType = response.headers.get('content-type') || '';
@@ -16,8 +16,13 @@ export async function getSkills(filters = {}) {
 }
 
 export async function createProfile(profile) {
-  const response = await fetch(`${API_URL}/profiles`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(profile) });
-  return readResponse(response, 'Could not create profile');
+  try {
+    const response = await fetch(`${API_URL}/profiles`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(profile) });
+    return await readResponse(response, 'Could not create profile');
+  } catch (error) {
+    if (error instanceof TypeError) throw new Error('Account server is unreachable. Check the deployed API URL and CORS settings.');
+    throw error;
+  }
 }
 
 export async function loginProfile(credentials) {
