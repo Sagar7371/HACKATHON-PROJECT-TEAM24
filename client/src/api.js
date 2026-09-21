@@ -68,7 +68,20 @@ export async function getPublicProfile(email) { const response = await fetch(`${
 export async function getRecommendations(email) { const response = await fetch(`${API_URL}/recommendations/${encodeURIComponent(email)}`); return readResponse(response, 'Could not load recommendations'); }
 export async function getSimilarUsers(email) { const response = await fetch(`${API_URL}/profiles/${encodeURIComponent(email)}/similar`); return readResponse(response, 'Could not load similar users'); }
 export async function changePassword(payload) { const response = await fetch(`${API_URL}/auth/change-password`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); return readResponse(response, 'Could not change password'); }
-export async function forgotPassword(email) { const response = await fetch(`${API_URL}/auth/forgot-password`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) }); return readResponse(response, 'Could not start password reset'); }
+export async function forgotPassword(email) {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 15000);
+  try {
+    const response = await fetch(`${API_URL}/auth/forgot-password`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }), signal: controller.signal });
+    return await readResponse(response, 'Could not start password reset');
+  } catch (error) {
+    if (error.name === 'AbortError') throw new Error('Email service took too long to respond. Please try again later.');
+    if (error instanceof TypeError) throw new Error('Account server is unreachable. Check the deployed API URL and CORS settings.');
+    throw error;
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
 export async function resetPassword(payload) { const response = await fetch(`${API_URL}/auth/reset-password`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); return readResponse(response, 'Could not reset password'); }
 export async function sendVerification(email) { const response = await fetch(`${API_URL}/auth/send-verification`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) }); return readResponse(response, 'Could not send verification'); }
 export async function deleteAccount(email) { const response = await fetch(`${API_URL}/profiles/${encodeURIComponent(email)}`, { method: 'DELETE' }); return readResponse(response, 'Could not delete account'); }
