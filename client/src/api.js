@@ -25,6 +25,11 @@ export async function loginProfile(credentials) {
   return readResponse(response, 'Could not log in');
 }
 
+export async function verifyEmail(token) {
+  const response = await fetch(`${API_URL}/auth/verify-email`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token }) });
+  return readResponse(response, 'Could not verify email');
+}
+
 export async function updateProfile(id, profile) {
   const lookups = [...new Set([id, profile.email].filter(Boolean))];
   if (!lookups.length) throw new Error('Your session is missing a profile identity. Please log in again.');

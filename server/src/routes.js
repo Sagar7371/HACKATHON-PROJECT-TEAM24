@@ -1,6 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
+import nodemailer from 'nodemailer';
 import Skill from './models/Skill.js';
 import Profile from './models/Profile.js';
 import Exchange from './models/Exchange.js';
@@ -12,6 +13,24 @@ import { readCollection, writeCollection } from './data/localCollections.js';
 
 const router = express.Router();
 let localSkills = seedSkills;
+
+const mailer = process.env.SMTP_HOST ? nodemailer.createTransport({ host: process.env.SMTP_HOST, port: Number(process.env.SMTP_PORT || 587), secure: process.env.SMTP_SECURE === 'true', auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } }) : null;
+
+async function sendVerificationEmail(email, token) {
+  if (!mailer) {
+    if (process.env.NODE_ENV === 'production') throw new Error('Email service is not configured.');
+    return;
+  }
+  const verifyUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}?verify=${encodeURIComponent(token)}`;
+  await mailer.sendMail({ from: process.env.SMTP_FROM || process.env.SMTP_USER, to: email, subject: 'Verify your SkillSwap account', text: `Verify your SkillSwap account: ${verifyUrl}`, html: `<p>Welcome to SkillSwap.</p><p><a href="${verifyUrl}">Verify your email address</a> to activate your account.</p><p>This link expires in 24 hours.</p>` });
+}
+
+function createVerificationToken(email) {
+  const token = `verify-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const tokens = readCollection('resetTokens.json').filter((item) => item.type !== 'verify' || item.expiresAt > Date.now());
+  writeCollection('resetTokens.json', [{ token, type: 'verify', email: email.trim().toLowerCase(), expiresAt: Date.now() + 24 * 60 * 60 * 1000 }, ...tokens]);
+  return token;
+}
 
 function databaseRequired(response) {
   if (process.env.NODE_ENV === 'production' && !process.env.MONGODB_URI) {
@@ -31,22 +50,29 @@ router.get('/health', (_request, response) => response.json({ ok: true, mode: pr
 router.post('/auth/send-verification', (request, response) => {
   const { email } = request.body;
   if (!email) return response.status(400).json({ message: 'Email is required.' });
-  const token = `verify-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  const tokens = readCollection('resetTokens.json').filter((item) => item.type !== 'verify' || item.expiresAt > Date.now());
-  writeCollection('resetTokens.json', [{ token, type: 'verify', email: email.trim().toLowerCase(), expiresAt: Date.now() + 24 * 60 * 60 * 1000 }, ...tokens]);
-  return response.json({ message: 'Verification instructions are ready.', developmentToken: process.env.NODE_ENV === 'production' ? undefined : token });
+  try {
+    const token = createVerificationToken(email);
+    return sendVerificationEmail(email.trim().toLowerCase(), token).then(() => response.json({ message: 'Verification email sent.' })).catch((error) => response.status(503).json({ message: error.message }));
+  } catch (error) {
+    return response.status(503).json({ message: error.message });
+  }
 });
 
-router.post('/auth/verify-email', (request, response) => {
+router.post('/auth/verify-email', async (request, response) => {
   const tokens = readCollection('resetTokens.json');
   const record = tokens.find((item) => item.type === 'verify' && item.token === request.body.token && item.expiresAt > Date.now());
   if (!record) return response.status(400).json({ message: 'Verification token is invalid or expired.' });
-  const profiles = readProfiles();
-  const index = profiles.findIndex((profile) => profile.email === record.email);
-  if (index === -1) return response.status(404).json({ message: 'Profile not found.' });
-  profiles[index].emailVerified = true;
-  profiles[index].verified = true;
-  writeProfiles(profiles);
+  if (process.env.MONGODB_URI) {
+    const profile = await Profile.findOneAndUpdate({ email: record.email }, { emailVerified: true, verified: true }, { new: true });
+    if (!profile) return response.status(404).json({ message: 'Profile not found.' });
+  } else {
+    const profiles = readProfiles();
+    const index = profiles.findIndex((profile) => profile.email === record.email);
+    if (index === -1) return response.status(404).json({ message: 'Profile not found.' });
+    profiles[index].emailVerified = true;
+    profiles[index].verified = true;
+    writeProfiles(profiles);
+  }
   writeCollection('resetTokens.json', tokens.filter((item) => item.token !== record.token));
   return response.json({ message: 'Email verified successfully.' });
 });
@@ -172,11 +198,16 @@ router.post('/profiles', async (request, response) => {
     }
     const created = { ...profileData, _id: `local-${Date.now()}`, createdAt: new Date().toISOString() };
     writeProfiles([created, ...profiles]);
-    return response.status(201).json(publicProfile(created));
+    const token = createVerificationToken(normalizedEmail);
+    await sendVerificationEmail(normalizedEmail, token);
+    return response.status(201).json({ message: 'Account created. Check your email to verify it.', verificationRequired: true, email: created.email, developmentToken: mailer ? undefined : token });
   }
 
   try {
-    return response.status(201).json(publicProfile(await Profile.create(profileData)));
+    const created = await Profile.create(profileData);
+    const token = createVerificationToken(normalizedEmail);
+    await sendVerificationEmail(normalizedEmail, token);
+    return response.status(201).json({ message: 'Account created. Check your email to verify it.', verificationRequired: true, email: created.email });
   } catch (error) {
     if (error.code === 11000) return response.status(409).json({ message: 'An account with this email already exists.' });
     throw error;
@@ -225,6 +256,7 @@ router.post('/auth/login', async (request, response) => {
     if (!profile || !(await bcrypt.compare(password, profile.passwordHash))) {
       return response.status(401).json({ message: 'Invalid email or password.' });
     }
+    if (!profile.emailVerified) return response.status(403).json({ message: 'Please verify your email before logging in.' });
     return response.json({ message: 'Login successful.', profile: publicProfile(profile) });
   }
 
@@ -232,6 +264,7 @@ router.post('/auth/login', async (request, response) => {
   if (!profile || !(await bcrypt.compare(password, profile.passwordHash))) {
     return response.status(401).json({ message: 'Invalid email or password.' });
   }
+  if (!profile.emailVerified) return response.status(403).json({ message: 'Please verify your email before logging in.' });
   return response.json({ message: 'Login successful.', profile: publicProfile(profile) });
 });
 

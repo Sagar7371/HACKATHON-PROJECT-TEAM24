@@ -25,7 +25,9 @@
 .auth-card input:focus { border-color: var(--forest); box-shadow: 0 0 0 3px rgba(217,237,103,.3); }
 .auth-submit { width: 100%; margin-top: 5px; }
 .auth-error { margin: 0; color: #b25f47; font-size: 11px; }
+.auth-notice { margin: 0; padding: 10px; border-radius: 5px; background: #e5eee2; color: var(--forest); font-size: 11px; line-height: 1.45; overflow-wrap: anywhere; }
 .auth-privacy { display: block; margin-top: 18px; color: #8a948c; font-size: 10px; line-height: 1.5; }
+.verification-card { width: min(430px, 100%); margin: auto; }
 html[data-theme='dark'] .auth-gate { background: #17291f; }
 html[data-theme='dark'] .auth-panel { background: rgba(31,55,43,.9); border-color: #466050; }
 html[data-theme='dark'] .auth-card { background: #eff3ed; border-color: #b8cbb9; }

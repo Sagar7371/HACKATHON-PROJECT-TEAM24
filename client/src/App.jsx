@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ArrowDown, ArrowLeftRight, ArrowUp, ArrowUpRight, Award, Bell, Bookmark, BriefcaseBusiness, CalendarDays, Check, CheckCircle2, ChevronDown, Clock3, Eye, EyeOff, Languages, Menu, MessageCircle, Moon, Search, Settings, ShieldCheck, Sparkles, Star, Sun, Target, Repeat2, UserRound, UsersRound, Video, X, XCircle } from 'lucide-react';
-import { blockUser, changePassword, createProfile, createVideoRoom, deleteAccount, forgotPassword, getGroups, getLeaderboard, getMessages, getNotifications, getRecommendations, getSkillMatches, getSkills, joinGroup, loginProfile, markMessageRead, markNotificationsRead, reportUser, scheduleExchange, sendMessage, sendVerification, updatePortfolio, updateProfile } from './api';
+import { blockUser, changePassword, createProfile, createVideoRoom, deleteAccount, forgotPassword, getGroups, getLeaderboard, getMessages, getNotifications, getRecommendations, getSkillMatches, getSkills, joinGroup, loginProfile, markMessageRead, markNotificationsRead, reportUser, scheduleExchange, sendMessage, sendVerification, updatePortfolio, updateProfile, verifyEmail } from './api';
 import { connectChat } from './socket';
 
 const categories = ['All', 'Technology', 'Creative', 'Food & home', 'Wellbeing'];
@@ -142,6 +142,8 @@ function App() {
     window.requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }));
   };
 
+  const verificationToken = new URLSearchParams(window.location.search).get('verify');
+  if (verificationToken) return <VerificationGate token={verificationToken} />;
   if (!currentUser) return <AuthGate onLogin={(user) => { setCurrentUser(user); localStorage.setItem('skillswap-user', JSON.stringify(user)); }} />;
 
   return <div className={darkMode ? 'app-shell dark-mode' : 'app-shell'}>
@@ -197,16 +199,20 @@ function AuthGate({ onLogin }) {
   const [mode, setMode] = useState('login');
   const [form, setForm] = useState({ name: '', email: '', password: '', teaches: '', wants: '' });
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(false);
   const switchMode = (nextMode) => { setMode(nextMode); setForm({ name: '', email: '', password: '', teaches: '', wants: '' }); setError(''); };
   const submit = async (event) => {
     event.preventDefault();
     setError('');
+    setNotice('');
     setLoading(true);
     try {
       if (mode === 'signup') {
-        const profile = await createProfile({ ...form, teaches: form.teaches ? [form.teaches] : [], wants: form.wants ? [form.wants] : [] });
-        onLogin(profile);
+        const result = await createProfile({ ...form, teaches: form.teaches ? [form.teaches] : [], wants: form.wants ? [form.wants] : [] });
+        setNotice(`${result.message} ${result.developmentToken ? `Development token: ${result.developmentToken}` : ''}`);
+        setMode('login');
+        setForm({ name: '', email: form.email, password: '', teaches: '', wants: '' });
       } else {
         const result = await loginProfile({ email: form.email, password: form.password });
         onLogin(result.profile);
@@ -217,7 +223,13 @@ function AuthGate({ onLogin }) {
       setLoading(false);
     }
   };
-  return <div className="auth-gate"><div className="auth-panel"><div className="auth-brand"><span className="brand-mark"><ArrowLeftRight size={17} strokeWidth={2.4} /></span><strong>skillswap</strong></div><div className="auth-layout"><div className="auth-intro"><div className="eyebrow"><Sparkles size={14} /> skills worth sharing</div><h1>Trade what you know.<br /><em>Grow together.</em></h1><p>Join a community where every useful skill can become someone else’s next chapter.</p><div className="auth-proof"><span>2,400+</span><small>good exchanges already moving</small></div></div><div className="auth-card"><div className="auth-tabs"><button type="button" className={mode === 'login' ? 'active' : ''} onClick={() => switchMode('login')}>Log in</button><button type="button" className={mode === 'signup' ? 'active' : ''} onClick={() => switchMode('signup')}>Sign in</button></div><div className="eyebrow">{mode === 'login' ? 'welcome back' : 'make your move'}</div><h2>{mode === 'login' ? 'Log in to SkillSwap.' : 'Create your profile.'}</h2><p>{mode === 'login' ? 'Pick up where your next good exchange left off.' : 'Put one skill on the table and meet your next exchange partner.'}</p><form onSubmit={submit}>{mode === 'signup' && <input required placeholder="Your name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />}<input required type="email" placeholder="Email address" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /><PasswordInput required minLength={mode === 'signup' ? 8 : undefined} placeholder={mode === 'signup' ? 'Password (8+ characters)' : 'Password'} value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} />{mode === 'signup' && <><input placeholder="What can you teach?" value={form.teaches} onChange={(event) => setForm({ ...form, teaches: event.target.value })} /><input placeholder="What do you want to learn?" value={form.wants} onChange={(event) => setForm({ ...form, wants: event.target.value })} /></>}{error && <p className="auth-error" role="alert">{error}</p>}<button className="button button-dark auth-submit" type="submit" disabled={loading}>{loading ? 'Please wait...' : mode === 'login' ? 'Log in' : 'Create profile'} <ArrowUpRight size={16} /></button></form><small className="auth-privacy">Your profile stays yours. No money, no pressure, just useful exchanges.</small></div></div></div></div>;
+  return <div className="auth-gate"><div className="auth-panel"><div className="auth-brand"><span className="brand-mark"><ArrowLeftRight size={17} strokeWidth={2.4} /></span><strong>skillswap</strong></div><div className="auth-layout"><div className="auth-intro"><div className="eyebrow"><Sparkles size={14} /> skills worth sharing</div><h1>Trade what you know.<br /><em>Grow together.</em></h1><p>Join a community where every useful skill can become someone else’s next chapter.</p><div className="auth-proof"><span>2,400+</span><small>good exchanges already moving</small></div></div><div className="auth-card"><div className="auth-tabs"><button type="button" className={mode === 'login' ? 'active' : ''} onClick={() => switchMode('login')}>Log in</button><button type="button" className={mode === 'signup' ? 'active' : ''} onClick={() => switchMode('signup')}>Sign in</button></div><div className="eyebrow">{mode === 'login' ? 'welcome back' : 'make your move'}</div><h2>{mode === 'login' ? 'Log in to SkillSwap.' : 'Create your profile.'}</h2><p>{mode === 'login' ? 'Pick up where your next good exchange left off.' : 'Put one skill on the table and meet your next exchange partner.'}</p><form onSubmit={submit}>{mode === 'signup' && <input required placeholder="Your name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />}<input required type="email" placeholder="Email address" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /><PasswordInput required minLength={mode === 'signup' ? 8 : undefined} placeholder={mode === 'signup' ? 'Password (8+ characters)' : 'Password'} value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} />{mode === 'signup' && <><input placeholder="What can you teach?" value={form.teaches} onChange={(event) => setForm({ ...form, teaches: event.target.value })} /><input placeholder="What do you want to learn?" value={form.wants} onChange={(event) => setForm({ ...form, wants: event.target.value })} /></>}{error && <p className="auth-error" role="alert">{error}</p>}{notice && <p className="auth-notice" role="status">{notice}</p>}<button className="button button-dark auth-submit" type="submit" disabled={loading}>{loading ? 'Please wait...' : mode === 'login' ? 'Log in' : 'Create profile'} <ArrowUpRight size={16} /></button></form><small className="auth-privacy">Your profile stays yours. No money, no pressure, just useful exchanges.</small></div></div></div></div>;
+}
+
+function VerificationGate({ token }) {
+  const [status, setStatus] = useState('Verifying your email...');
+  useEffect(() => { verifyEmail(token).then((result) => { setStatus(result.message); window.history.replaceState({}, '', window.location.pathname); }).catch((error) => setStatus(error.message)); }, [token]);
+  return <div className="auth-gate"><div className="auth-card verification-card"><div className="account-panel-icon"><Check size={23} /></div><div className="eyebrow">email verification</div><h2>{status}</h2><p>Your SkillSwap account will be available after verification.</p><a className="button button-dark" href={window.location.pathname}>Continue to SkillSwap <ArrowUpRight size={16} /></a></div></div>;
 }
 
 function PasswordInput({ value, onChange, ...props }) {
