@@ -1,0 +1,16 @@
+[
+  {
+    "_id": "group-cse-builders",
+    "name": "CSE Builders",
+    "description": "A study circle for coding, systems and interview prep.",
+    "category": "Technology",
+    "members": 28
+  },
+  {
+    "_id": "group-language-exchange",
+    "name": "Language Exchange",
+    "description": "Practice languages through generous skill swaps.",
+    "category": "Languages",
+    "members": 41
+  }
+]
