@@ -25,7 +25,11 @@ app.use('/api', routes);
 io.on('connection', (socket) => {
   socket.on('join-room', (email) => { if (email) socket.join(email.toLowerCase()); });
   socket.on('send-message', (message) => {
-    if (message?.recipientEmail) io.to(message.recipientEmail.toLowerCase()).emit('chat-message', message);
+    const senderEmail = message?.senderEmail?.toLowerCase();
+    const recipientEmail = message?.recipientEmail?.toLowerCase();
+    if (senderEmail && recipientEmail && senderEmail !== 'demo@gmail.com' && recipientEmail !== 'demo@gmail.com') {
+      io.to(recipientEmail).emit('chat-message', message);
+    }
   });
 });
 

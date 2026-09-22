@@ -83,6 +83,18 @@ function discoverableProfileQuery() {
   return { emailVerified: true, profileVisible: { $ne: false }, email: { $ne: 'demo@gmail.com' } };
 }
 
+async function discoverableEmails() {
+  if (process.env.MONGODB_URI) {
+    const profiles = await Profile.find(discoverableProfileQuery()).select('email').lean();
+    return new Set(profiles.map((profile) => profile.email.toLowerCase()));
+  }
+  return new Set(readProfiles().filter(isDiscoverableProfile).map((profile) => profile.email.toLowerCase()));
+}
+
+function hasDiscoverableParticipants(item, emails, fields) {
+  return fields.every((field) => item[field] && emails.has(item[field].toLowerCase()));
+}
+
 router.get('/health', (_request, response) => response.json({ ok: true, mode: process.env.MONGODB_URI ? 'mongodb-ready' : 'memory' }));
 
 router.post('/auth/send-verification', (request, response) => {
@@ -448,16 +460,19 @@ router.put('/profiles/:id', async (request, response) => {
   return response.json(publicProfile(updated));
 });
 
-router.post('/exchanges', (request, response) => {
+router.post('/exchanges', async (request, response) => {
+  const emails = await discoverableEmails();
+  if (!hasDiscoverableParticipants(request.body, emails, ['requesterEmail', 'ownerEmail'])) return response.status(403).json({ message: 'Exchanges are available only between verified community members.' });
   const exchange = { _id: `exchange-${Date.now()}`, ...request.body, status: 'pending', createdAt: new Date().toISOString() };
   const exchanges = readCollection('exchanges.json');
   writeCollection('exchanges.json', [exchange, ...exchanges]);
   return response.status(201).json(exchange);
 });
 
-router.get('/exchanges/:email', (request, response) => {
+router.get('/exchanges/:email', async (request, response) => {
   const email = decodeURIComponent(request.params.email).toLowerCase();
-  return response.json(readCollection('exchanges.json').filter((item) => item.requesterEmail === email || item.ownerEmail === email));
+  const emails = await discoverableEmails();
+  return response.json(readCollection('exchanges.json').filter((item) => (item.requesterEmail === email || item.ownerEmail === email) && hasDiscoverableParticipants(item, emails, ['requesterEmail', 'ownerEmail'])));
 });
 
 router.patch('/exchanges/:id', (request, response) => {
@@ -478,21 +493,31 @@ router.patch('/exchanges/:id/schedule', (request, response) => {
   return response.json(exchanges[index]);
 });
 
-router.post('/reviews', (request, response) => {
+router.post('/reviews', async (request, response) => {
   const { reviewerEmail, reviewerName, recipientEmail, rating, text } = request.body;
   if (!reviewerEmail || !recipientEmail || !rating || !text?.trim() || rating < 1 || rating > 5) return response.status(400).json({ message: 'Reviewer, recipient, rating and review text are required.' });
+  const emails = await discoverableEmails();
+  if (!hasDiscoverableParticipants({ reviewerEmail, recipientEmail }, emails, ['reviewerEmail', 'recipientEmail'])) return response.status(403).json({ message: 'Reviews are available only for verified community members.' });
   const review = { _id: `review-${Date.now()}`, reviewerEmail, reviewerName, recipientEmail, rating: Number(rating), text: text.trim(), createdAt: new Date().toISOString() };
   const reviews = readCollection('reviews.json');
   writeCollection('reviews.json', [review, ...reviews]);
   return response.status(201).json(review);
 });
 
-router.get('/reviews/:email', (request, response) => response.json(readCollection('reviews.json').filter((review) => review.recipientEmail === decodeURIComponent(request.params.email).toLowerCase())));
+router.get('/reviews/:email', async (request, response) => {
+  const emails = await discoverableEmails();
+  const email = decodeURIComponent(request.params.email).toLowerCase();
+  return response.json(readCollection('reviews.json').filter((review) => review.recipientEmail === email && hasDiscoverableParticipants(review, emails, ['reviewerEmail', 'recipientEmail'])));
+});
 
-router.post('/messages', (request, response) => {
+router.post('/messages', async (request, response) => {
   const { senderName, senderEmail, recipientName, recipientEmail = '', message } = request.body;
   if (!senderName || !senderEmail || !recipientName || !message?.trim()) {
     return response.status(400).json({ message: 'Sender, recipient and message are required.' });
+  }
+  const emails = await discoverableEmails();
+  if (!hasDiscoverableParticipants({ senderEmail, recipientEmail }, emails, ['senderEmail', 'recipientEmail'])) {
+    return response.status(403).json({ message: 'Messaging is available only between verified community members.' });
   }
   const recipientProfile = recipientEmail ? readProfiles().find((profile) => profile.email === recipientEmail.toLowerCase()) : null;
   if (recipientProfile?.allowMessages === false) return response.status(403).json({ message: 'This user has disabled direct messages.' });
@@ -510,9 +535,10 @@ router.post('/messages', (request, response) => {
   return response.status(201).json(created);
 });
 
-router.get('/messages/:email', (request, response) => {
+router.get('/messages/:email', async (request, response) => {
   const email = decodeURIComponent(request.params.email).toLowerCase();
-  return response.json(readMessages().filter((message) => message.senderEmail === email || message.recipientEmail === email));
+  const emails = await discoverableEmails();
+  return response.json(readMessages().filter((message) => (message.senderEmail === email || message.recipientEmail === email) && hasDiscoverableParticipants(message, emails, ['senderEmail', 'recipientEmail'])));
 });
 
 router.patch('/messages/:id/read', (request, response) => {
@@ -524,9 +550,10 @@ router.patch('/messages/:id/read', (request, response) => {
   return response.json(messages[index]);
 });
 
-router.get('/notifications/:email', (request, response) => {
+router.get('/notifications/:email', async (request, response) => {
   const email = decodeURIComponent(request.params.email).toLowerCase();
-  return response.json(readCollection('notifications.json').filter((notification) => notification.email === email));
+  const emails = await discoverableEmails();
+  return response.json(readCollection('notifications.json').filter((notification) => notification.email === email && emails.has(notification.email)));
 });
 
 router.patch('/notifications/:email/read', (request, response) => {
