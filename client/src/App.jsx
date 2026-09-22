@@ -205,23 +205,31 @@ function AuthGate({ onLogin }) {
   const [loading, setLoading] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
+  const [resetStatus, setResetStatus] = useState('');
   const switchMode = (nextMode) => { setMode(nextMode); setForm({ name: '', email: '', password: '', teaches: '', wants: '' }); setError(''); };
   const requestReset = async () => {
     if (!resetEmail.trim()) return;
-    setError('');
-    setNotice('');
+    setResetStatus('');
     setLoading(true);
     try {
       const result = await forgotPassword(resetEmail.trim());
-      setNotice(result.developmentToken ? `${result.message} Development token: ${result.developmentToken}` : result.message);
-      setResetOpen(false);
-      setResetEmail('');
+      setResetStatus(result.developmentToken ? `${result.message} Development token: ${result.developmentToken}` : result.message);
     } catch (requestError) {
-      setError(requestError.message || 'Could not start password reset.');
+      setResetStatus(requestError.message || 'Could not start password reset.');
     } finally {
       setLoading(false);
     }
   };
+  useEffect(() => {
+    const panel = document.querySelector('.reset-panel');
+    if (!panel || !resetStatus) return undefined;
+    const result = document.createElement('p');
+    result.className = 'reset-result';
+    result.setAttribute('role', 'status');
+    result.textContent = resetStatus;
+    panel.querySelector('form')?.before(result);
+    return () => result.remove();
+  }, [resetStatus, resetOpen]);
   const submit = async (event) => {
     event.preventDefault();
     setError('');

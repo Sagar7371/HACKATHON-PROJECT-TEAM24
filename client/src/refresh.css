@@ -29,6 +29,7 @@
 .reset-backdrop { z-index: 80; }
 .reset-panel { width: min(430px, 100%); }
 .reset-panel form { display: grid; gap: 12px; margin-top: 22px; }
+.reset-result { margin: 16px 0 0; padding: 10px; border-radius: 5px; background: #e5eee2; color: var(--forest); font-size: 11px; line-height: 1.45; overflow-wrap: anywhere; }
 .reset-panel form input { width: 100%; border: 1px solid #d7e0d5; border-radius: 5px; padding: 12px; background: #fffdf9; color: var(--forest); outline: none; font-size: 12px; }
 .auth-error { margin: 0; color: #b25f47; font-size: 11px; }
 .auth-notice { margin: 0; padding: 10px; border-radius: 5px; background: #e5eee2; color: var(--forest); font-size: 11px; line-height: 1.45; overflow-wrap: anywhere; }
