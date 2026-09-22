@@ -1,5 +1,32 @@
 /* Advanced discovery controls */
 .auth-gate { min-height: 100vh; display: grid; place-items: center; padding: 28px; background: radial-gradient(circle at 12% 10%, #e8f0d9 0, transparent 30%), radial-gradient(circle at 88% 90%, #f2d8c8 0, transparent 28%), var(--cream); color: var(--forest); }
+.home-content-hidden { display: none; }
+.dedicated-page { min-height: calc(100vh - 76px); padding: 78px 8vw 100px; background: #e9f0e5; color: var(--forest); }
+.dedicated-page-inner { max-width: 1120px; margin: 0 auto; }
+.dedicated-back { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 45px; color: #718076; font-size: 12px; }
+.dedicated-page h1 { margin: 14px 0 10px; font: 500 clamp(48px, 7vw, 86px)/.95 Fraunces, serif; letter-spacing: -3px; }
+.dedicated-intro { max-width: 520px; color: #68716b; font-size: 16px; line-height: 1.6; }
+.dedicated-skill-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 42px; }
+.dedicated-people-grid { margin-top: 42px; }
+.dedicated-steps { margin-top: 48px; }
+.dedicated-story { max-width: 760px; margin-top: 55px; padding: 42px; background: #dce9df; }
+.dedicated-story blockquote { margin: 0 0 35px; color: var(--forest); font: 500 clamp(32px, 5vw, 62px)/1.02 Fraunces, serif; }
+.dedicated-panels { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 45px; }
+.dedicated-panels > div { min-height: 190px; padding: 28px; border: 1px solid #d7e0d5; border-radius: 8px; background: #fffdf9; }
+.dedicated-panels svg { color: #b86e4e; }
+.dedicated-panels h2 { margin: 25px 0 8px; font: 500 28px Fraunces, serif; }
+.dedicated-panels p { max-width: 320px; color: #68716b; line-height: 1.5; }
+.dedicated-member-note { margin-top: 45px; color: #718076; font: 10px 'DM Mono', monospace; text-transform: uppercase; }
+html[data-theme='dark'] .dedicated-page { background: #17271f; color: #eef4ed; }
+html[data-theme='dark'] .dedicated-intro, html[data-theme='dark'] .dedicated-back, html[data-theme='dark'] .dedicated-panels p { color: #aebdb1; }
+html[data-theme='dark'] .dedicated-panels > div { background: #eff3ed; color: var(--forest); }
+html[data-theme='dark'] .dedicated-story { background: #294438; }
+@media (max-width: 760px) {
+  .dedicated-page { padding: 48px 6vw 75px; }
+  .dedicated-skill-grid, .dedicated-panels { grid-template-columns: 1fr; }
+  .dedicated-page h1 { font-size: 55px; }
+  .dedicated-story { padding: 28px; }
+}
 .auth-panel { width: min(1120px, 100%); min-height: 680px; padding: 27px clamp(24px, 5vw, 66px) 54px; border: 1px solid #dbe2d5; border-radius: 18px; background: rgba(251,248,241,.82); box-shadow: 0 24px 70px rgba(25,53,42,.12); }
 .auth-brand { display: flex; align-items: center; gap: 9px; font-size: 20px; }
 .auth-layout { display: grid; grid-template-columns: 1fr 390px; align-items: center; gap: clamp(42px, 8vw, 120px); max-width: 930px; margin: 75px auto 0; }

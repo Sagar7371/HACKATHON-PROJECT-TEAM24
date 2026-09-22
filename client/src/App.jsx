@@ -27,6 +27,7 @@ function App() {
   const [skillsLoading, setSkillsLoading] = useState(true);
   const [skillsError, setSkillsError] = useState('');
   const [activeModal, setActiveModal] = useState(null);
+  const [activePage, setActivePage] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [status, setStatus] = useState('');
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('skillswap-theme') === 'dark');
@@ -137,6 +138,7 @@ function App() {
   const similarPeople = currentUser?.teaches?.length ? people.filter((person) => currentUser.teaches.some((skill) => person.skills.toLowerCase().includes(skill.toLowerCase())) || currentUser.wants?.some((skill) => person.skills.toLowerCase().includes(skill.toLowerCase()))) : people;
 
   const scrollTo = (id) => {
+    setActivePage(null);
     setActiveModal(null);
     setMobileOpen(false);
     window.requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }));
@@ -153,7 +155,7 @@ function App() {
       <a className="brand" href="#top" onClick={() => scrollTo('top')}><span className="brand-mark"><ArrowLeftRight size={17} strokeWidth={2.4} /></span> skillswap</a>
       <button className="menu-toggle" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Toggle navigation">{mobileOpen ? <X size={20} /> : <Menu size={20} />}</button>
       <nav className={mobileOpen ? 'main-nav open' : 'main-nav'}>
-        <button onClick={() => scrollTo('explore')}>{labels.explore}</button><button onClick={() => scrollTo('people')}>{labels.people}</button><button onClick={() => scrollTo('how')}>How it works</button><button onClick={() => scrollTo('stories')}>Stories</button><button onClick={() => setActiveModal('account-community')}>{labels.community}</button><button onClick={() => setActiveModal('account-advanced')}><Sparkles size={14} /> {labels.advanced}</button>
+        <button onClick={() => { setActivePage('explore'); setMobileOpen(false); }}>{labels.explore}</button><button onClick={() => { setActivePage('people'); setMobileOpen(false); }}>{labels.people}</button><button onClick={() => { setActivePage('how'); setMobileOpen(false); }}>How it works</button><button onClick={() => { setActivePage('stories'); setMobileOpen(false); }}>Stories</button><button onClick={() => { setActivePage('community'); setMobileOpen(false); }}>{labels.community}</button><button onClick={() => { setActivePage('advanced'); setMobileOpen(false); }}><Sparkles size={14} /> {labels.advanced}</button>
         <button className={darkMode ? 'theme-toggle is-dark' : 'theme-toggle'} onClick={() => setDarkMode(!darkMode)} aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'} title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}><Moon className="theme-moon" size={14} /><span className="theme-knob"></span><Sun className="theme-sun" size={14} /></button>
         {currentUser ? <div className="user-menu"><button className="user-menu-trigger" onClick={() => setAccountOpen(!accountOpen)} aria-expanded={accountOpen}>{currentUser.avatar ? <img className="nav-avatar" src={currentUser.avatar} alt="" /> : <span className="nav-avatar nav-avatar-fallback">{currentUser.name?.slice(0, 2).toUpperCase()}</span>}<span className="signed-in-user">{currentUser.name}</span><ChevronDown size={14} /></button>{accountOpen && <div className="user-dropdown"><button onClick={() => { setActiveModal('account-profile'); setAccountOpen(false); }}><UserRound size={14} /> My profile</button><button onClick={() => { setActiveModal('account-messages'); setAccountOpen(false); }}><MessageCircle size={14} /> Messages {unreadMessages > 0 && <span className="menu-count">{unreadMessages}</span>}</button><button onClick={() => { setActiveModal('account-exchanges'); setAccountOpen(false); }}><Repeat2 size={14} /> My exchanges</button><button onClick={() => { setActiveModal('account-saved'); setAccountOpen(false); }}><Bookmark size={14} /> Saved skills</button><button onClick={() => { setActiveModal('account-settings'); setAccountOpen(false); }}><Settings size={14} /> Settings</button><button onClick={() => { setActiveModal('account-password'); setAccountOpen(false); }}><Settings size={14} /> Change password</button><button onClick={() => { setActiveModal('account-safety'); setAccountOpen(false); }}><ShieldCheck size={14} /> Trust & safety</button><span className="dropdown-divider"></span><button className="logout-item" onClick={() => { localStorage.removeItem('skillswap-user'); setCurrentUser(null); setAccountOpen(false); }}><ArrowUpRight size={14} /> Log out</button></div>}</div> : <button className="login-link" onClick={() => setActiveModal('login')}>Log in</button>}
         {currentUser && <button className="notification-button" onClick={() => setNotificationOpen(!notificationOpen)} aria-label="Notifications" aria-expanded={notificationOpen}><Bell size={17} />{notificationHistory.filter((item) => !item.read).length > 0 && <span>{notificationHistory.filter((item) => !item.read).length}</span>}</button>}
@@ -161,7 +163,8 @@ function App() {
       </nav>
     </header>
 
-    <main id="top">
+    {activePage && <DedicatedPage page={activePage} currentUser={currentUser} skills={sortedSkills} similarPeople={similarPeople} onClose={() => setActivePage(null)} onConnect={openMessage} />}
+    <main id="top" className={activePage ? 'home-content-hidden' : ''}>
       <section className="hero section-pad">
         <div className="hero-copy reveal"><div className="eyebrow"><Sparkles size={15} /> skills worth sharing</div><h1>Trade what you know.<br /><em>Grow together.</em></h1><p className="hero-text">A community where your skills become someone else’s next chapter — and theirs become yours.</p><div className="hero-actions"><button className="button button-dark" onClick={() => scrollTo('explore')}>Explore the exchange <ArrowUpRight size={17} /></button><button className="text-button" onClick={() => scrollTo('how')}>See how it works <span>↓</span></button></div><div className="proof"><div className="avatar-stack"><span>MC</span><span>LO</span><span>AM</span><span>+</span></div><div><strong>2,400+ exchanges</strong><small>made with good intentions</small></div></div></div>
         <div className="hero-art reveal-delay exchange-visual">
@@ -208,10 +211,9 @@ function AuthGate({ onLogin }) {
   const [resetEmail, setResetEmail] = useState('');
   const [resetStatus, setResetStatus] = useState('');
   const [resetLink, setResetLink] = useState('');
-  const switchMode = (nextMode) => { setMode(nextMode); setForm({ name: '', email: '', password: '', teaches: '', wants: '' }); setError(''); };
+  const switchMode = (nextMode) => { setMode(nextMode); setForm({ name: '', email: '', password: '', teaches: '', wants: '' }); setError(''); setResetStatus(''); setResetLink(''); };
   const requestReset = async () => {
-      if (!resetEmail.trim()) { setResetStatus('Please enter a valid email.'); return; }
-    const switchMode = (nextMode) => { setMode(nextMode); setForm({ name: '', email: '', password: '', teaches: '', wants: '' }); setError(''); setResetStatus(''); setResetLink(''); };
+    if (!resetEmail.trim()) { setResetStatus('Please enter a valid email.'); return; }
     setResetLink('');
     setResetLoading(true);
     try {
@@ -394,6 +396,33 @@ function AdvancedPanel({ user, onClose, onSaved }) {
 
 function NotificationsPanel({ notifications, onMarkRead, onClose }) {
   return <div className="notification-popover"><div className="notification-popover-head"><strong>Notifications</strong><button onClick={onClose} aria-label="Close notifications"><X size={15} /></button></div>{notifications.length ? notifications.map((notification) => <div className="notification-item" key={notification._id}><span className="notification-icon"><MessageCircle size={15} /></span><span><strong>{notification.title}</strong><small>{new Date(notification.createdAt).toLocaleString()}</small></span></div>) : <div className="notification-empty">No notification history yet.</div>}<button className="notification-clear" onClick={onMarkRead}>Mark all as read</button></div>;
+}
+
+function DedicatedPage({ page, currentUser, skills, similarPeople, onClose, onConnect }) {
+  const pages = {
+    explore: ['Explore skills', 'Find a skill exchange that fits the way you learn.'],
+    people: ['Find people', 'Meet generous people with useful skills to share.'],
+    how: ['How it works', 'A simple rhythm for turning curiosity into a good exchange.'],
+    stories: ['Stories', 'Small trades can lead to meaningful new chapters.'],
+    community: ['Community', 'Find your circle, learn together and celebrate skill-sharing.'],
+    advanced: ['Advanced', 'Use your profile signals to make better exchanges.']
+  };
+  const [title, description] = pages[page];
+  return <section className={`dedicated-page dedicated-page-${page}`} aria-labelledby="dedicated-page-title">
+    <div className="dedicated-page-inner">
+      <button className="dedicated-back" onClick={onClose}><ArrowLeftRight size={15} /> Back to exchange</button>
+      <div className="eyebrow">skillswap workspace</div>
+      <h1 id="dedicated-page-title">{title}.</h1>
+      <p className="dedicated-intro">{description}</p>
+      {page === 'explore' && <div className="dedicated-skill-grid">{skills.length ? skills.map((skill) => <SkillCard key={skill._id || skill.title} skill={skill} saved={false} onSave={() => {}} onConnect={() => onConnect({ name: skill.teacher.name, email: skill.teacher.email || '' })} />) : <EmptyState />}</div>}
+      {page === 'people' && <div className="people-grid dedicated-people-grid">{similarPeople.map((person) => <div className="person-card" key={person.name}><div className="person-avatar" style={{ background: person.color }}>{person.initials}</div><div className="person-info"><h3>{person.name}</h3><p>{person.role}</p><small>{person.city}</small><div className="person-skills">{person.skills.split(' · ').map((skill) => <span key={skill}>{skill}</span>)}</div></div><ArrowUpRight className="person-arrow" size={19} /></div>)}</div>}
+      {page === 'how' && <div className="steps dedicated-steps"><Step number="01" title="Put it out there" text="Tell the community what you know, and what you are curious to learn next." /><Step number="02" title="Find the spark" text="Browse real people and specific skills until something clicks." /><Step number="03" title="Make the trade" text="Agree on a format, swap time and leave a little better than you arrived." /></div>}
+      {page === 'stories' && <div className="dedicated-story"><blockquote>“I came for the pottery lessons. I stayed for the community.”</blockquote><div className="story-person"><div className="mini-avatar">JR</div><div><strong>Jules R.</strong><small>Member since 2024</small></div></div></div>}
+      {page === 'community' && <div className="dedicated-panels"><div><UsersRound size={22} /><h2>Find your circle.</h2><p>Join groups around shared interests and make learning feel social.</p></div><div><MessageCircle size={22} /><h2>Keep exchanges moving.</h2><p>Message your partners and create a video room for your next session.</p></div></div>}
+      {page === 'advanced' && <div className="dedicated-panels"><div><Target size={22} /><h2>Better matches.</h2><p>Teaching and learning goals help surface exchanges that fit your profile.</p></div><div><BriefcaseBusiness size={22} /><h2>Show your work.</h2><p>Keep your portfolio, credentials and learning signal together.</p></div></div>}
+      {currentUser && <p className="dedicated-member-note">Signed in as {currentUser.name}.</p>}
+    </div>
+  </section>;
 }
 
 export default App;
