@@ -207,14 +207,21 @@ function AuthGate({ onLogin }) {
   const [resetOpen, setResetOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [resetStatus, setResetStatus] = useState('');
+  const [resetLink, setResetLink] = useState('');
   const switchMode = (nextMode) => { setMode(nextMode); setForm({ name: '', email: '', password: '', teaches: '', wants: '' }); setError(''); };
   const requestReset = async () => {
-    if (!resetEmail.trim()) return;
-    setResetStatus('');
+      if (!resetEmail.trim()) { setResetStatus('Please enter a valid email.'); return; }
+    const switchMode = (nextMode) => { setMode(nextMode); setForm({ name: '', email: '', password: '', teaches: '', wants: '' }); setError(''); setResetStatus(''); setResetLink(''); };
+    setResetLink('');
     setResetLoading(true);
     try {
       const result = await forgotPassword(resetEmail.trim());
-      setResetStatus(result.developmentToken ? `${result.message} Development token: ${result.developmentToken}` : result.message);
+      setResetStatus(result.message);
+      if (result.developmentToken) {
+        const resetUrl = `${window.location.origin}${window.location.pathname}?reset=${encodeURIComponent(result.developmentToken)}`;
+        setResetLink(resetUrl);
+        window.location.assign(resetUrl);
+      }
     } catch (requestError) {
       setResetStatus(requestError.message || 'Could not start password reset.');
     } finally {
