@@ -129,7 +129,7 @@ router.get('/skills', async (request, response) => {
   if (!process.env.MONGODB_URI) {
     const filtered = localSkills.filter((skill) => {
       const matchesCategory = !category || category === 'All' || skill.category === category;
-      const wantsMatch = !search || skill.wants.toLowerCase().includes(search.toLowerCase()) || skill.title.toLowerCase().includes(search.toLowerCase());
+      const wantsMatch = !search || skill.wants.toLowerCase().includes(search.toLowerCase()) || skill.title.toLowerCase().includes(search.toLowerCase()) || skill.teacher.name.toLowerCase().includes(search.toLowerCase()) || skill.teacher.role.toLowerCase().includes(search.toLowerCase()) || skill.category.toLowerCase().includes(search.toLowerCase());
       const teachMatch = !teach || skill.title.toLowerCase().includes(teach.toLowerCase()) || skill.description.toLowerCase().includes(teach.toLowerCase());
       const wantsFieldMatch = !wants || skill.wants.toLowerCase().includes(wants.toLowerCase());
       const locationMatch = !location || skill.teacher.location.toLowerCase().includes(location.toLowerCase());
@@ -143,8 +143,12 @@ router.get('/skills', async (request, response) => {
   }
   const query = {};
   if (category && category !== 'All') query.category = category;
-  if (search || wants) query.wants = { $regex: search || wants, $options: 'i' };
-  if (teach) query.$or = [{ title: { $regex: teach, $options: 'i' } }, { description: { $regex: teach, $options: 'i' } }];
+  if (search) query.$or = [{ title: { $regex: search, $options: 'i' } }, { wants: { $regex: search, $options: 'i' } }, { category: { $regex: search, $options: 'i' } }, { 'teacher.name': { $regex: search, $options: 'i' } }, { 'teacher.role': { $regex: search, $options: 'i' } }];
+  else if (wants) query.wants = { $regex: wants, $options: 'i' };
+  if (teach) {
+    const teachQuery = { $or: [{ title: { $regex: teach, $options: 'i' } }, { description: { $regex: teach, $options: 'i' } }] };
+    if (query.$or) { query.$and = [{ $or: query.$or }, teachQuery]; delete query.$or; } else query.$or = teachQuery.$or;
+  }
   if (format) query.format = { $regex: format, $options: 'i' };
   if (level) query.level = level;
   if (location) query['teacher.location'] = { $regex: location, $options: 'i' };
