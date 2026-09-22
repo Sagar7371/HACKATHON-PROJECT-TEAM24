@@ -300,6 +300,23 @@ html[data-theme='dark'] .dedicated-page { background: #17271f; color: #eef4ed; }
 html[data-theme='dark'] .dedicated-intro, html[data-theme='dark'] .dedicated-back, html[data-theme='dark'] .dedicated-panels p { color: #aebdb1; }
 html[data-theme='dark'] .dedicated-panels > div { background: #eff3ed; color: var(--forest); }
 html[data-theme='dark'] .dedicated-story { background: #294438; }
+html[data-theme='dark'] .dedicated-page-people { background: #101b17; }
+html[data-theme='dark'] .dedicated-page-people .people-directory-toolbar input,
+html[data-theme='dark'] .dedicated-page-people .people-directory-toolbar select { background: #162f29; border-color: #466050; color: #eef4ed; }
+html[data-theme='dark'] .dedicated-page-people .people-directory-toolbar input::placeholder { color: #9fb7a5; }
+html[data-theme='dark'] .dedicated-page-people .person-directory-card { background: linear-gradient(180deg, #1c332a, #15261f); border-color: #365347; box-shadow: 0 3px 0 rgba(7, 14, 10, .7); }
+html[data-theme='dark'] .dedicated-page-people .person-directory-card:hover { transform: none; box-shadow: 0 7px 0 rgba(217, 237, 103, .35); }
+html[data-theme='dark'] .dedicated-page-people .person-directory-main h3 { color: #eef4ed; }
+html[data-theme='dark'] .dedicated-page-people .person-directory-main p,
+html[data-theme='dark'] .dedicated-page-people .person-directory-main > small,
+html[data-theme='dark'] .dedicated-page-people .person-directory-meta,
+html[data-theme='dark'] .dedicated-page-people .person-directory-wants { color: #c7d6ca; }
+html[data-theme='dark'] .dedicated-page-people .person-directory-skills span { background: #2b493c; color: #dce9dc; }
+html[data-theme='dark'] .dedicated-page-people .match-score { background: #315442; color: #dce9dc; }
+html[data-theme='dark'] .dedicated-page-people .person-directory-wants,
+html[data-theme='dark'] .dedicated-page-people .person-directory-actions { border-color: rgba(184, 203, 185, .25); }
+html[data-theme='dark'] .dedicated-page-people .person-directory-actions button { background: #294438; color: #eef4ed; }
+html[data-theme='dark'] .dedicated-page-people .person-directory-actions button:hover { background: #d9ed67; color: #19352a; }
 @media (max-width: 760px) {
   .dedicated-page { padding: 48px 6vw 75px; }
   .dedicated-skill-grid, .dedicated-panels { grid-template-columns: 1fr; }
