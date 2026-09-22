@@ -757,6 +757,16 @@ html[data-theme='dark'] .empty-exchanges strong { color: #eef4ed; }
 .search-box:focus-within { border-color: var(--forest); box-shadow: 0 0 0 4px rgba(217,237,103,.3); }
 .skill-card { background: var(--cream); border: 0; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 0 rgba(25,53,42,.08); transition: box-shadow .2s ease, border-color .2s ease; }
 .skill-card:hover { transform: none; box-shadow: 0 7px 0 rgba(217,237,103,.45); }
+.skill-card .card-body { display: flex; flex-direction: column; min-height: 288px; }
+.skill-card .card-body p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.skill-card .trade-row { margin-top: auto; }
+.skill-card .tiny-avatar { overflow: hidden; flex: 0 0 27px; }
+.skill-card .tiny-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+.skill-card .teacher > span:last-child { min-width: 0; }
+.skill-card .teacher small { display: block; max-width: 145px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.skill-card .rating small, .skill-card .wants small { display: block; font-size: 9px; font-weight: 400; }
+.skill-card .wants { min-width: 0; }
+.skill-card .wants small { margin-bottom: 2px; text-transform: uppercase; letter-spacing: .06em; }
 .card-top { height: 168px; }
 .round-arrow { transition: transform .2s ease, background .2s ease; }
 .skill-card:hover .round-arrow { background: var(--lime); }
@@ -885,6 +895,9 @@ html[data-theme='dark'] .skill-card .round-arrow,
 html[data-theme='dark'] .skill-card .save-skill-button { background: rgba(239, 246, 235, .92); color: #19352a; }
 html[data-theme='dark'] .skill-card .round-arrow:hover,
 html[data-theme='dark'] .skill-card .save-skill-button:hover { background: #d9ed67; }
+html[data-theme='dark'] .skill-card .rating small,
+html[data-theme='dark'] .skill-card .teacher-location,
+html[data-theme='dark'] .skill-card .wants small { color: #9fb7a5; }
 html[data-theme='dark'] .how-section { background: #111c17; }
 html[data-theme='dark'] .step:not(:last-child) { border-color: #304538; }
 html[data-theme='dark'] .step p { color: #aebdb1; }
