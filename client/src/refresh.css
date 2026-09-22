@@ -41,6 +41,54 @@ html[data-theme='dark'] .skill-detail-facts span { background: #e0e9df; }
   .skill-detail-hero { margin: -23px -23px 24px; }
 }
 .dedicated-people-grid { margin-top: 42px; }
+.people-directory { margin-top: 42px; }
+.people-directory-toolbar { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr 1fr; gap: 8px; }
+.people-directory-toolbar input, .people-directory-toolbar select { min-width: 0; border: 1px solid #d2dad0; border-radius: 5px; padding: 11px; background: var(--cream); color: var(--forest); font-size: 11px; }
+.people-directory-toolbar .search-box { min-width: 0; }
+.people-directory-summary { margin: 18px 0; color: #718076; font: 10px 'DM Mono', monospace; text-transform: uppercase; }
+.people-directory-summary span { margin: 0 6px; color: var(--peach); }
+.people-directory-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+.person-directory-card { display: flex; flex-direction: column; min-width: 0; padding: 17px; border: 1px solid #d7e0d5; border-radius: 9px; background: #fffdf9; cursor: pointer; transition: transform .2s, box-shadow .2s; }
+.person-directory-card:hover { transform: translateY(-4px); box-shadow: 8px 8px 0 #dfeadf; }
+.person-directory-top { display: flex; align-items: flex-start; gap: 10px; }
+.person-directory-top .person-avatar { width: 54px; height: 54px; overflow: hidden; flex: 0 0 54px; }
+.person-directory-top .person-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.match-score { margin-left: auto; padding: 6px 8px; border-radius: 99px; background: #e5eee2; color: #356a50; font: 9px 'DM Mono', monospace; }
+.person-save { display: grid; place-items: center; padding: 4px; color: #718076; }
+.person-save:hover { color: var(--forest); }
+.person-directory-main { flex: 1; }
+.person-directory-main h3 { margin: 16px 0 3px; color: var(--forest); font: 500 23px Fraunces, serif; }
+.person-directory-main h3 .verified-badge { width: 16px; height: 16px; font-size: 10px; }
+.person-directory-main p { margin: 0 0 5px; color: #68716b; font-size: 11px; }
+.person-directory-main > small { color: #718076; font-size: 10px; }
+.person-directory-skills { display: flex; flex-wrap: wrap; gap: 5px; margin: 15px 0 11px; }
+.person-directory-skills span { padding: 5px 7px; border-radius: 4px; background: #e9f0e5; color: var(--forest); font-size: 10px; }
+.person-directory-wants { padding: 9px 0; border-top: 1px solid #e5e9e3; color: #718076; font-size: 10px; line-height: 1.4; }
+.person-directory-wants b { display: block; margin-bottom: 3px; color: #b86e4e; font: 9px 'DM Mono', monospace; text-transform: uppercase; }
+.person-directory-meta { display: flex; flex-wrap: wrap; gap: 8px; color: #718076; font: 9px 'DM Mono', monospace; }
+.person-directory-meta span:first-child { color: #b86e4e; }
+.person-directory-meta span { display: inline-flex; align-items: center; gap: 3px; }
+.person-directory-actions { display: flex; gap: 7px; margin-top: 17px; padding-top: 12px; border-top: 1px solid #e5e9e3; }
+.person-directory-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 5px; flex: 1; padding: 8px 6px; border-radius: 4px; background: #eef3eb; color: var(--forest); font-size: 10px; }
+.person-directory-actions button:hover { background: var(--forest); color: var(--cream); }
+.people-profile-panel { width: min(600px, 100%); }
+.people-profile-heading { display: flex; align-items: center; gap: 16px; }
+.people-profile-heading .profile-avatar { width: 86px; height: 86px; overflow: hidden; flex: 0 0 86px; }
+.people-profile-heading .profile-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.people-profile-heading h2 { margin: 8px 0 3px; font: 500 33px Fraunces, serif; }
+.people-profile-heading p, .people-profile-heading small { display: block; margin: 0; color: #718076; font-size: 11px; }
+.people-profile-heading small { margin-top: 5px; }
+.people-profile-bio { margin: 24px 0; color: #68716b; line-height: 1.55; }
+.people-profile-facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+.people-profile-facts span { display: grid; gap: 5px; padding: 10px; background: #e9f0e5; color: #718076; font-size: 9px; }
+.people-profile-facts b { font: 8px 'DM Mono', monospace; text-transform: uppercase; }
+.people-profile-facts strong { display: inline-flex; align-items: center; gap: 3px; color: var(--forest); font-size: 11px; }
+.people-profile-section { display: grid; gap: 8px; margin-top: 20px; padding-top: 16px; border-top: 1px solid #d7ddd4; }
+.people-profile-section p { margin: 0; color: #68716b; font-size: 11px; line-height: 1.5; }
+html[data-theme='dark'] .people-directory-toolbar input, html[data-theme='dark'] .people-directory-toolbar select { background: #eff3ed; }
+html[data-theme='dark'] .person-directory-card { background: #eff3ed; }
+@media (max-width: 900px) { .people-directory-toolbar { grid-template-columns: repeat(3, 1fr); } .people-directory-toolbar .search-box { grid-column: span 3; } .people-directory-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px) { .people-directory-toolbar { grid-template-columns: 1fr 1fr; } .people-directory-toolbar .search-box { grid-column: span 2; } .people-directory-grid { grid-template-columns: 1fr; } .people-profile-facts { grid-template-columns: 1fr 1fr; } }
 .dedicated-steps { margin-top: 48px; }
 .dedicated-story { max-width: 760px; margin-top: 55px; padding: 42px; background: #dce9df; }
 .dedicated-story blockquote { margin: 0 0 35px; color: var(--forest); font: 500 clamp(32px, 5vw, 62px)/1.02 Fraunces, serif; }
