@@ -158,6 +158,14 @@ function App() {
     document.addEventListener('click', closeAccountMenu);
     return () => document.removeEventListener('click', closeAccountMenu);
   }, [accountOpen]);
+  useEffect(() => {
+    if (!notificationOpen) return undefined;
+    const closeNotifications = (event) => {
+      if (!event.target.closest('.notification-popover') && !event.target.closest('.notification-button')) setNotificationOpen(false);
+    };
+    document.addEventListener('mousedown', closeNotifications);
+    return () => document.removeEventListener('mousedown', closeNotifications);
+  }, [notificationOpen]);
 
   const sortedSkills = [...skills].sort((first, second) => sort === 'rating' ? second.teacher.rating - first.teacher.rating : sort === 'newest' ? String(second._id).localeCompare(String(first._id)) : sort === 'nearby' && location ? Number(second.teacher.location.toLowerCase().includes(location.toLowerCase())) - Number(first.teacher.location.toLowerCase().includes(location.toLowerCase())) : 0);
   const recommendedSkills = currentUser?.wants?.length ? allSkills.filter((skill) => currentUser.wants.some((want) => `${skill.title} ${skill.category} ${skill.wants}`.toLowerCase().includes(want.toLowerCase()))).slice(0, 3) : [];
