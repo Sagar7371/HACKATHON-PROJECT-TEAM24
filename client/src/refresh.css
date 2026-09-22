@@ -295,6 +295,33 @@ html[data-theme='dark'] .community-group-card, html[data-theme='dark'] .communit
 .faq-item p { margin: -5px 30px 17px 0; color: #68716b; font-size: 12px; line-height: 1.5; }
 html[data-theme='dark'] .how-flow, html[data-theme='dark'] .how-demo, html[data-theme='dark'] .how-explanation, html[data-theme='dark'] .how-timeline, html[data-theme='dark'] .how-formats, html[data-theme='dark'] .how-faq { background: #eff3ed; color: var(--forest); }
 html[data-theme='dark'] .how-demo { background: #dce9df; }
+html[data-theme='dark'] .dedicated-page-how { background: #101b17; }
+html[data-theme='dark'] .dedicated-page-how .how-flow,
+html[data-theme='dark'] .dedicated-page-how .how-explanation,
+html[data-theme='dark'] .dedicated-page-how .how-timeline,
+html[data-theme='dark'] .dedicated-page-how .how-formats,
+html[data-theme='dark'] .dedicated-page-how .how-faq { background: #182c24; border-color: #365347; color: #eef4ed; }
+html[data-theme='dark'] .dedicated-page-how .how-flow-heading { border-color: rgba(184, 203, 185, .25); }
+html[data-theme='dark'] .dedicated-page-how .how-flow-heading strong,
+html[data-theme='dark'] .dedicated-page-how .how-step-detail h2,
+html[data-theme='dark'] .dedicated-page-how .how-explanation h2,
+html[data-theme='dark'] .dedicated-page-how .how-formats h2,
+html[data-theme='dark'] .dedicated-page-how .how-faq h2 { color: #eef4ed; }
+html[data-theme='dark'] .dedicated-page-how .how-step-list button { background: #16261f; border-color: #365347; color: #aebdb1; }
+html[data-theme='dark'] .dedicated-page-how .how-step-list button.active { background: #2b493c; border-color: #9fca9e; color: #eef4ed; }
+html[data-theme='dark'] .dedicated-page-how .how-step-detail p,
+html[data-theme='dark'] .dedicated-page-how .how-demo p,
+html[data-theme='dark'] .dedicated-page-how .how-explanation p,
+html[data-theme='dark'] .dedicated-page-how .how-formats p { color: #c7d6ca; }
+html[data-theme='dark'] .dedicated-page-how .how-demo { background: #1f3b30; border-color: #466050; }
+html[data-theme='dark'] .dedicated-page-how .how-demo select,
+html[data-theme='dark'] .dedicated-page-how .how-demo-match { background: #16261f; border-color: #466050; color: #eef4ed; }
+html[data-theme='dark'] .dedicated-page-how .how-demo-match strong { color: #eef4ed; }
+html[data-theme='dark'] .dedicated-page-how .faq-item { border-color: rgba(184, 203, 185, .25); }
+html[data-theme='dark'] .dedicated-page-how .how-formats .format-grid > div { color: #eef4ed; }
+html[data-theme='dark'] .dedicated-page-how .how-formats .format-grid p { color: #aebdb1; }
+html[data-theme='dark'] .dedicated-page-how .how-ctas { background: #d9ed67; color: #19352a; }
+html[data-theme='dark'] .dedicated-page-how .how-ctas h2 { color: #19352a; }
 @media (max-width: 760px) { .how-flow-heading, .how-explanation, .how-formats, .how-safety, .how-ctas { display: block; } .how-step-list { grid-template-columns: repeat(2, 1fr); } .how-demo { grid-template-columns: 1fr; gap: 20px; } .how-explanation-grid, .format-grid, .safety-grid { grid-template-columns: 1fr 1fr; margin-top: 22px; } .timeline-row { gap: 12px; overflow-x: auto; } .timeline-row > div { min-width: 110px; } .how-ctas > div { justify-content: flex-start; margin-top: 20px; } }
 html[data-theme='dark'] .dedicated-page { background: #17271f; color: #eef4ed; }
 html[data-theme='dark'] .dedicated-intro, html[data-theme='dark'] .dedicated-back, html[data-theme='dark'] .dedicated-panels p { color: #aebdb1; }
