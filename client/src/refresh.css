@@ -565,6 +565,8 @@ main { padding-top: 76px; }
 .notification-popover-head { display: flex; align-items: center; justify-content: space-between; padding: 2px 2px 12px; border-bottom: 1px solid #dfe4dc; font-size: 14px; }
 .notification-popover-head button { color: #718076; }
 .notification-item { display: flex; align-items: flex-start; gap: 10px; padding: 13px 2px; border-bottom: 1px solid #e5e9e3; }
+.notification-item-clickable { cursor: pointer; border-radius: 5px; transition: background .2s ease; }
+.notification-item-clickable:hover { background: rgba(217,237,103,.12); }
 .notification-icon { width: 29px; height: 29px; display: grid; place-items: center; border-radius: 50%; background: #e8d7ce; color: #a95f45; flex-shrink: 0; }
 .notification-lime { background: #e4efba; color: var(--forest); }
 .notification-item strong, .notification-item small { display: block; }

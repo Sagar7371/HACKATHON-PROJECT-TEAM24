@@ -530,7 +530,7 @@ router.post('/messages', async (request, response) => {
   writeMessages([created, ...messages]);
   if (recipientEmail) {
     const notifications = readCollection('notifications.json');
-    writeCollection('notifications.json', [{ _id: `notification-${Date.now()}`, email: recipientEmail.toLowerCase(), type: 'message', title: `${senderName} sent you a message`, read: false, createdAt: new Date().toISOString() }, ...notifications]);
+    writeCollection('notifications.json', [{ _id: `notification-${Date.now()}`, email: recipientEmail.toLowerCase(), type: 'message', senderName, senderEmail: senderEmail.toLowerCase(), title: `${senderName} sent you a message`, read: false, createdAt: new Date().toISOString() }, ...notifications]);
   }
   return response.status(201).json(created);
 });
