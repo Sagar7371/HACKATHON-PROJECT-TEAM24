@@ -849,7 +849,13 @@ html[data-theme='dark'] .user-dropdown button:hover { background: #dfe9df; }
 html[data-theme='dark'] .dropdown-divider { background: #466050; }
 html[data-theme='dark'] .theme-toggle { border-color: #466050; color: var(--lime); }
 html[data-theme='dark'] .hero h1, html[data-theme='dark'] .section-heading h2, html[data-theme='dark'] .card-body h3 { color: #eef4ed; }
-html[data-theme='dark'] .hero-text, html[data-theme='dark'] .proof small, html[data-theme='dark'] .card-body p, html[data-theme='dark'] .wants { color: #aebdb1; }
+html[data-theme='dark'] .hero-text, html[data-theme='dark'] .proof small { color: #aebdb1; }
+html[data-theme='dark'] .card-body p,
+html[data-theme='dark'] .trade-row .wants,
+html[data-theme='dark'] .trade-row small,
+html[data-theme='dark'] .teacher small,
+html[data-theme='dark'] .card-meta span,
+html[data-theme='dark'] .rating { color: #355245; }
 html[data-theme='dark'] .explore-section { background: #17271f; }
 html[data-theme='dark'] .explore-toolbar { border-color: #304538; }
 html[data-theme='dark'] .category-tabs button { color: #aebdb1; }
