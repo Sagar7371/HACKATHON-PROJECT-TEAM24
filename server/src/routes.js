@@ -15,28 +15,44 @@ const router = express.Router();
 let localSkills = seedSkills;
 
 const mailer = process.env.SMTP_HOST ? nodemailer.createTransport({ host: process.env.SMTP_HOST, port: Number(process.env.SMTP_PORT || 587), secure: process.env.SMTP_SECURE === 'true', family: 4, auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }, connectionTimeout: 10000, greetingTimeout: 10000, socketTimeout: 10000 }) : null;
+const brevoApiKey = process.env.BREVO_API_KEY;
 
 function emailServiceMessage(error) {
   if (error?.code === 'ENETUNREACH' || error?.code === 'ETIMEDOUT' || error?.code === 'ECONNREFUSED') return 'Email service is unreachable from the hosting server. Please check SMTP settings or try again later.';
   return error?.message || 'Email service is unavailable. Please try again later.';
 }
 
+async function sendEmail(message) {
+  if (brevoApiKey) {
+    const senderEmail = message.from.match(/<([^>]+)>/)?.[1] || message.from;
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { accept: 'application/json', 'api-key': brevoApiKey, 'content-type': 'application/json' },
+      body: JSON.stringify({ sender: { email: senderEmail }, to: [{ email: message.to }], subject: message.subject, textContent: message.text, htmlContent: message.html })
+    });
+    if (!response.ok) throw new Error(`Brevo email service returned ${response.status}.`);
+    return;
+  }
+  if (!mailer) return;
+  await mailer.sendMail(message);
+}
+
 async function sendVerificationEmail(email, token) {
-  if (!mailer) {
+  if (!mailer && !brevoApiKey) {
     if (process.env.NODE_ENV === 'production') throw new Error('Email service is not configured.');
     return;
   }
   const verifyUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}?verify=${encodeURIComponent(token)}`;
-  await mailer.sendMail({ from: process.env.SMTP_FROM || process.env.SMTP_USER, to: email, subject: 'Verify your SkillSwap account', text: `Verify your SkillSwap account: ${verifyUrl}`, html: `<p>Welcome to SkillSwap.</p><p><a href="${verifyUrl}">Verify your email address</a> to activate your account.</p><p>This link expires in 24 hours.</p>` });
+  await sendEmail({ from: process.env.SMTP_FROM || process.env.SMTP_USER, to: email, subject: 'Verify your SkillSwap account', text: `Verify your SkillSwap account: ${verifyUrl}`, html: `<p>Welcome to SkillSwap.</p><p><a href="${verifyUrl}">Verify your email address</a> to activate your account.</p><p>This link expires in 24 hours.</p>` });
 }
 
 async function sendResetEmail(email, token) {
-  if (!mailer) {
+  if (!mailer && !brevoApiKey) {
     if (process.env.NODE_ENV === 'production') throw new Error('Email service is not configured.');
     return;
   }
   const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}?reset=${encodeURIComponent(token)}`;
-  await mailer.sendMail({ from: process.env.SMTP_FROM || process.env.SMTP_USER, to: email, subject: 'Reset your SkillSwap password', text: `Reset your SkillSwap password: ${resetUrl}`, html: `<p>We received a password reset request for your SkillSwap account.</p><p><a href="${resetUrl}">Reset your password</a></p><p>This link expires in 15 minutes.</p>` });
+  await sendEmail({ from: process.env.SMTP_FROM || process.env.SMTP_USER, to: email, subject: 'Reset your SkillSwap password', text: `We received a password reset request for your SkillSwap account. Reset your password here: ${resetUrl}. This link expires in 15 minutes.`, html: `<p>We received a password reset request for your SkillSwap account.</p><p><a href="${resetUrl}">Reset your password</a></p><p>This link expires in 15 minutes.</p>` });
 }
 
 function createVerificationToken(email) {
