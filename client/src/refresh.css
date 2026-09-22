@@ -755,11 +755,11 @@ html[data-theme='dark'] .empty-exchanges strong { color: #eef4ed; }
 .category-tabs button.active:after { height: 3px; border-radius: 4px; background: var(--peach); margin-top: 8px; }
 .search-box { background: var(--cream); border: 1px solid #cdd2c8; border-radius: 99px; padding: 10px 14px; transition: border-color .2s, box-shadow .2s; }
 .search-box:focus-within { border-color: var(--forest); box-shadow: 0 0 0 4px rgba(217,237,103,.3); }
-.skill-card { background: var(--cream); border: 0; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 0 rgba(25,53,42,.08); transition: transform .28s cubic-bezier(.2,.8,.2,1), box-shadow .28s ease; }
-.skill-card:hover { transform: translateY(-8px) rotate(-.4deg); box-shadow: 10px 13px 0 rgba(217,237,103,.65); }
+.skill-card { background: var(--cream); border: 0; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 0 rgba(25,53,42,.08); transition: box-shadow .2s ease, border-color .2s ease; }
+.skill-card:hover { transform: none; box-shadow: 0 7px 0 rgba(217,237,103,.45); }
 .card-top { height: 168px; }
 .round-arrow { transition: transform .2s ease, background .2s ease; }
-.skill-card:hover .round-arrow { transform: rotate(45deg); background: var(--lime); }
+.skill-card:hover .round-arrow { background: var(--lime); }
 .sort-select { display: flex; align-items: center; gap: 8px; color: #718076; font-size: 11px; white-space: nowrap; }
 .sort-select select { border: 1px solid #cdd2c8; border-radius: 99px; padding: 9px 12px; background: var(--cream); color: var(--forest); font-size: 11px; }
 .skill-skeleton { min-height: 370px; overflow: hidden; border-radius: 10px; background: var(--cream); border: 1px solid #dfe4dc; padding-bottom: 18px; }
@@ -813,7 +813,7 @@ html[data-theme='dark'] .state-panel strong { color: #eef4ed; }
   .hero-art { min-height: 360px; height: 360px; border-radius: 42% 58% 48% 52% / 46% 44% 56% 54%; }
   .hero h1 { font-size: 55px; }
   .section-heading h2 { font-size: 43px; }
-  .skill-card:hover { transform: translateY(-4px); }
+  .skill-card:hover { transform: none; }
   .story-section:after { font-size: 150px; right: -6%; bottom: -45px; }
 }
 
