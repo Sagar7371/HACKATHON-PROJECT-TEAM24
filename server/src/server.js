@@ -31,6 +31,10 @@ io.on('connection', (socket) => {
       io.to(recipientEmail).emit('chat-message', message);
     }
   });
+  socket.on('message-seen', (message) => {
+    const senderEmail = message?.senderEmail?.toLowerCase();
+    if (senderEmail && message?.messageId) io.to(senderEmail).emit('message-seen', { messageId: message.messageId });
+  });
 });
 
 if (process.env.MONGODB_URI) {
