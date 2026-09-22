@@ -133,6 +133,14 @@ function App() {
   useEffect(() => { getSkills({ category: 'All', search: '', page: 1, limit: 24 }).then((result) => setAllSkills(result.items)).catch(() => setAllSkills([])); }, []);
   useEffect(() => { if (!currentUser?.email) return undefined; getMessages(currentUser.email).then((items) => setUnreadMessages(items.filter((item) => !item.read && item.recipientEmail === currentUser.email).length)).catch(() => setUnreadMessages(0)); getNotifications(currentUser.email).then(setNotificationHistory).catch(() => setNotificationHistory([])); return undefined; }, [currentUser?.email]);
   useEffect(() => { if (!toast) return undefined; const timer = window.setTimeout(() => setToast(''), 2800); return () => window.clearTimeout(timer); }, [toast]);
+  useEffect(() => {
+    if (!accountOpen) return undefined;
+    const closeAccountMenu = (event) => {
+      if (!event.target.closest('.user-menu')) setAccountOpen(false);
+    };
+    document.addEventListener('click', closeAccountMenu);
+    return () => document.removeEventListener('click', closeAccountMenu);
+  }, [accountOpen]);
 
   const sortedSkills = [...skills].sort((first, second) => sort === 'rating' ? second.teacher.rating - first.teacher.rating : sort === 'newest' ? String(second._id).localeCompare(String(first._id)) : sort === 'nearby' && location ? Number(second.teacher.location.toLowerCase().includes(location.toLowerCase())) - Number(first.teacher.location.toLowerCase().includes(location.toLowerCase())) : 0);
   const recommendedSkills = currentUser?.wants?.length ? allSkills.filter((skill) => currentUser.wants.some((want) => `${skill.title} ${skill.category} ${skill.wants}`.toLowerCase().includes(want.toLowerCase()))).slice(0, 3) : [];
