@@ -260,6 +260,44 @@ html[data-theme='dark'] .dedicated-page-stories .stories-submit { border-color: 
 .community-moderation button { color: var(--forest); font-size: 10px; text-decoration: underline; }
 html[data-theme='dark'] .community-stats div, html[data-theme='dark'] .community-workspace-section, html[data-theme='dark'] .community-compose { background: #eff3ed; }
 html[data-theme='dark'] .community-group-card, html[data-theme='dark'] .community-post { border-color: #b8cbb9; }
+html[data-theme='dark'] .dedicated-page-community { background: #101b17; }
+html[data-theme='dark'] .dedicated-page-community .community-stats { background: #365347; border-color: #365347; }
+html[data-theme='dark'] .dedicated-page-community .community-stats div,
+html[data-theme='dark'] .dedicated-page-community .community-workspace-section,
+html[data-theme='dark'] .dedicated-page-community .community-compose { background: #182c24 !important; border-color: #365347; color: #eef4ed; }
+html[data-theme='dark'] .dedicated-page-community .community-stats strong,
+html[data-theme='dark'] .dedicated-page-community .community-section-heading h2,
+html[data-theme='dark'] .dedicated-page-community .community-compose h2 { color: #eef4ed; }
+html[data-theme='dark'] .dedicated-page-community .community-stats span,
+html[data-theme='dark'] .dedicated-page-community .community-section-heading small { color: #aebdb1; }
+html[data-theme='dark'] .dedicated-page-community .community-tabs { border-color: rgba(184, 203, 185, .25); }
+html[data-theme='dark'] .dedicated-page-community .community-tabs button { color: #aebdb1; }
+html[data-theme='dark'] .dedicated-page-community .community-tabs button.active { color: #eef4ed; border-color: #d9ed67; }
+html[data-theme='dark'] .dedicated-page-community .community-group-card,
+html[data-theme='dark'] .dedicated-page-community .community-post { border-color: #365347; background: #16261f; }
+html[data-theme='dark'] .dedicated-page-community .community-group-card strong,
+html[data-theme='dark'] .dedicated-page-community .community-post h3,
+html[data-theme='dark'] .dedicated-page-community .community-post-head strong { color: #eef4ed; }
+html[data-theme='dark'] .dedicated-page-community .community-group-card small,
+html[data-theme='dark'] .dedicated-page-community .community-group-card em,
+html[data-theme='dark'] .dedicated-page-community .community-post-head small,
+html[data-theme='dark'] .dedicated-page-community .community-post p,
+html[data-theme='dark'] .dedicated-page-community .community-post-actions button { color: #aebdb1; }
+html[data-theme='dark'] .dedicated-page-community .community-post-actions { border-color: rgba(184, 203, 185, .25); }
+html[data-theme='dark'] .dedicated-page-community .community-post-actions button:hover { color: #d9ed67; }
+html[data-theme='dark'] .dedicated-page-community .community-event { background: #203b30; }
+html[data-theme='dark'] .dedicated-page-community .community-event h3 { color: #eef4ed; }
+html[data-theme='dark'] .dedicated-page-community .community-event p,
+html[data-theme='dark'] .dedicated-page-community .community-moderation { color: #aebdb1; }
+html[data-theme='dark'] .dedicated-page-community .community-event button,
+html[data-theme='dark'] .dedicated-page-community .community-moderation strong,
+html[data-theme='dark'] .dedicated-page-community .community-moderation button { color: #eef4ed; }
+html[data-theme='dark'] .dedicated-page-community .community-leader { border-color: rgba(184, 203, 185, .25); }
+html[data-theme='dark'] .dedicated-page-community .community-leader strong { color: #eef4ed; }
+html[data-theme='dark'] .dedicated-page-community .community-leader small { color: #aebdb1; }
+html[data-theme='dark'] .dedicated-page-community .community-compose select,
+html[data-theme='dark'] .dedicated-page-community .community-compose textarea { background: #16261f; border-color: #466050; color: #eef4ed; }
+html[data-theme='dark'] .dedicated-page-community .community-moderation { border-color: #466050; }
 @media (max-width: 900px) { .community-groups-grid, .community-feed-grid { grid-template-columns: repeat(2, 1fr); } .community-room-section { grid-template-columns: 1fr; } }
 @media (max-width: 640px) { .community-stats { grid-template-columns: 1fr 1fr; } .community-groups-grid, .community-feed-grid, .community-events-grid { grid-template-columns: 1fr; } .community-section-heading { display: block; } .community-section-heading small { display: block; margin-top: 8px; } .community-leader { grid-template-columns: 25px 35px 1fr auto; } .community-leader small { display: none; } .community-moderation { align-items: flex-start; flex-wrap: wrap; } }
 .dedicated-member-note { margin-top: 45px; color: #718076; font: 10px 'DM Mono', monospace; text-transform: uppercase; }
