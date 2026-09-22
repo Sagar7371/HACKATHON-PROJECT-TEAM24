@@ -313,10 +313,10 @@ router.post('/auth/change-password', async (request, response) => {
 router.post('/auth/forgot-password', async (request, response) => {
   const { email } = request.body;
   if (!email) return response.status(400).json({ message: 'Email is required.' });
-  const token = `reset-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  const tokens = readCollection('resetTokens.json').filter((item) => item.expiresAt > Date.now());
-  writeCollection('resetTokens.json', [{ token, email: email.trim().toLowerCase(), expiresAt: Date.now() + 15 * 60 * 1000 }, ...tokens]);
   try {
+    const token = `reset-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const tokens = readCollection('resetTokens.json').filter((item) => item.expiresAt > Date.now());
+    writeCollection('resetTokens.json', [{ token, email: email.trim().toLowerCase(), expiresAt: Date.now() + 15 * 60 * 1000 }, ...tokens]);
     if (process.env.MONGODB_URI) {
       const profile = await Profile.findOne({ email: email.trim().toLowerCase() });
       if (!profile) return response.json({ message: 'If the account exists, reset instructions are ready.' });
