@@ -327,6 +327,24 @@ router.get('/admin/reports', (request, response) => {
   return response.json(readCollection('reports.json'));
 });
 
+router.get('/admin/stats', async (request, response) => {
+  if (!process.env.ADMIN_KEY || request.headers['x-admin-key'] !== process.env.ADMIN_KEY) return response.status(403).json({ message: 'Admin access required.' });
+  if (process.env.MONGODB_URI) {
+    const [total, verified, discoverable] = await Promise.all([
+      Profile.countDocuments(),
+      Profile.countDocuments({ emailVerified: true }),
+      Profile.countDocuments(discoverableProfileQuery())
+    ]);
+    return response.json({ total, verified, discoverable });
+  }
+  const profiles = readProfiles();
+  return response.json({
+    total: profiles.length,
+    verified: profiles.filter((profile) => profile.emailVerified).length,
+    discoverable: profiles.filter(isDiscoverableProfile).length
+  });
+});
+
 router.post('/auth/login', async (request, response) => {
   if (databaseRequired(response)) return;
   const { email, password } = request.body;

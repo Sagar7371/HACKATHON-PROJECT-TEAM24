@@ -43,6 +43,14 @@ A live deployment URL is intentionally not included because this workspace has n
 
 For a deployed app, set `MONGODB_URI`, `NODE_ENV=production`, and the SMTP variables from `server/.env.example` on the server. Set the client build variable `VITE_API_URL` to the deployed API URL ending in `/api`. Signup sends a verification email and login is blocked until the link is opened. Signup and login use MongoDB profiles; production refuses to use the local JSON fallback for account authentication.
 
+To view account counts as the owner, set a private `ADMIN_KEY` on the API server and call the protected stats endpoint:
+
+```powershell
+Invoke-RestMethod -Uri "https://your-api.example.com/api/admin/stats" -Headers @{ "x-admin-key" = $env:ADMIN_KEY }
+```
+
+It returns `total`, `verified`, and `discoverable` account counts. Keep the key private and do not put it in the frontend.
+
 ## Project layout
 
 - `client/` React/Vite frontend
