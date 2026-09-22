@@ -14,7 +14,12 @@ import { readCollection, writeCollection } from './data/localCollections.js';
 const router = express.Router();
 let localSkills = seedSkills;
 
-const mailer = process.env.SMTP_HOST ? nodemailer.createTransport({ host: process.env.SMTP_HOST, port: Number(process.env.SMTP_PORT || 587), secure: process.env.SMTP_SECURE === 'true', auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }, connectionTimeout: 10000, greetingTimeout: 10000, socketTimeout: 10000 }) : null;
+const mailer = process.env.SMTP_HOST ? nodemailer.createTransport({ host: process.env.SMTP_HOST, port: Number(process.env.SMTP_PORT || 587), secure: process.env.SMTP_SECURE === 'true', family: 4, auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }, connectionTimeout: 10000, greetingTimeout: 10000, socketTimeout: 10000 }) : null;
+
+function emailServiceMessage(error) {
+  if (error?.code === 'ENETUNREACH' || error?.code === 'ETIMEDOUT' || error?.code === 'ECONNREFUSED') return 'Email service is unreachable from the hosting server. Please check SMTP settings or try again later.';
+  return error?.message || 'Email service is unavailable. Please try again later.';
+}
 
 async function sendVerificationEmail(email, token) {
   if (!mailer) {
@@ -319,7 +324,7 @@ router.post('/auth/forgot-password', async (request, response) => {
     await sendResetEmail(email.trim().toLowerCase(), token);
     return response.json({ message: 'If the account exists, reset instructions are ready.', developmentToken: process.env.NODE_ENV === 'production' || mailer ? undefined : token });
   } catch (error) {
-    return response.status(503).json({ message: error.message || 'Email service is unavailable.' });
+    return response.status(503).json({ message: emailServiceMessage(error) });
   }
 });
 
