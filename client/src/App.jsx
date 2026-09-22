@@ -5,6 +5,12 @@ import { connectChat } from './socket';
 
 const categories = ['All', 'Technology', 'Creative', 'Food & home', 'Wellbeing'];
 const people = [];
+const persistentPages = ['explore', 'people', 'community', 'advanced'];
+
+function getInitialPage() {
+  const page = new URLSearchParams(window.location.search).get('page');
+  return persistentPages.includes(page) ? page : null;
+}
 
 function App() {
   const [skills, setSkills] = useState([]);
@@ -27,7 +33,7 @@ function App() {
   const [selectedSkill, setSelectedSkill] = useState(null);
   const [selectedPerson, setSelectedPerson] = useState(null);
   const [selectedStory, setSelectedStory] = useState(null);
-  const [activePage, setActivePage] = useState(null);
+  const [activePage, setActivePage] = useState(getInitialPage);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [status, setStatus] = useState('');
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('skillswap-theme') === 'dark');
@@ -54,6 +60,13 @@ function App() {
     document.documentElement.lang = language;
     localStorage.setItem('skillswap-language', language);
   }, [darkMode, accent, language]);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (activePage) url.searchParams.set('page', activePage);
+    else url.searchParams.delete('page');
+    window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+  }, [activePage]);
 
   useEffect(() => {
     if (activeModal === 'login' || activeModal === 'account-community' || activeModal === 'account-advanced') setMobileOpen(false);
