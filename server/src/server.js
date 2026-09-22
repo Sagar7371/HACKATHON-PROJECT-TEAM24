@@ -9,6 +9,7 @@ import routes from './routes.js';
 
 const app = express();
 const httpServer = createServer(app);
+app.set('trust proxy', 1);
 const allowedOrigins = (process.env.CLIENT_URLS || process.env.CLIENT_URL || 'http://localhost:5173').split(',').map((origin) => origin.trim()).filter(Boolean);
 const isAllowedOrigin = (origin) => !origin || allowedOrigins.includes(origin) || /^https:\/\/([a-z0-9-]+\.)*vercel\.app$/i.test(origin);
 const corsOptions = { origin: (origin, callback) => { if (isAllowedOrigin(origin)) return callback(null, true); return callback(new Error('Origin is not allowed by CORS')); } };
