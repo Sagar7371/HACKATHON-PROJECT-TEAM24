@@ -423,6 +423,10 @@ html[data-theme='dark'] .dedicated-page-people .person-directory-wants,
 html[data-theme='dark'] .dedicated-page-people .person-directory-actions { border-color: rgba(184, 203, 185, .25); }
 html[data-theme='dark'] .dedicated-page-people .person-directory-actions button { background: #294438; color: #eef4ed; }
 html[data-theme='dark'] .dedicated-page-people .person-directory-actions button:hover { background: #d9ed67; color: #19352a; }
+html[data-theme='dark'] .dedicated-page-advanced { background: #101b17; }
+html[data-theme='dark'] .dedicated-page-advanced .dedicated-panels > div { background: linear-gradient(180deg, #1c332a, #15261f); border-color: #365347; color: #eef4ed; }
+html[data-theme='dark'] .dedicated-page-advanced .dedicated-panels h2 { color: #eef4ed; }
+html[data-theme='dark'] .dedicated-page-advanced .dedicated-panels p { color: #c7d6ca; }
 @media (max-width: 760px) {
   .dedicated-page { padding: 48px 6vw 75px; }
   .dedicated-skill-grid, .dedicated-panels { grid-template-columns: 1fr; }
