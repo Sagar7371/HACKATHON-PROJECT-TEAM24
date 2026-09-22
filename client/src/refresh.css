@@ -461,8 +461,8 @@ html[data-theme='dark'] .login-link:hover { background: #294438; color: #eef4ed;
 html[data-theme='dark'] .user-menu-trigger { color: #c5d1c7; }
 html[data-theme='dark'] .user-menu-trigger:hover, html[data-theme='dark'] .user-menu-trigger[aria-expanded='true'] { background: #294438; color: #eef4ed; }
 html[data-theme='dark'] .user-dropdown { background: #eff3ed; border-color: #466050; }
-html[data-theme='dark'] .user-dropdown button { color: #19352a; }
-html[data-theme='dark'] .user-dropdown .logout-item { color: #9f503b; }
+html[data-theme='dark'] .main-nav .user-dropdown button { color: #19352a; }
+html[data-theme='dark'] .main-nav .user-dropdown .logout-item { color: #9f503b; }
 html[data-theme='dark'] .user-dropdown button:hover { background: #dfe9df; }
 
 /* Keep tall account forms below the fixed navbar and scroll them independently. */
