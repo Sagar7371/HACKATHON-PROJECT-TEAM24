@@ -35,6 +35,11 @@ io.on('connection', (socket) => {
     const senderEmail = message?.senderEmail?.toLowerCase();
     if (senderEmail && message?.messageId) io.to(senderEmail).emit('message-seen', { messageId: message.messageId });
   });
+  socket.on('typing', (message) => {
+    const senderEmail = message?.senderEmail?.toLowerCase();
+    const recipientEmail = message?.recipientEmail?.toLowerCase();
+    if (senderEmail && recipientEmail) io.to(recipientEmail).emit('user-typing', { senderEmail, senderName: message.senderName, conversationId: senderEmail, isTyping: Boolean(message.isTyping) });
+  });
 });
 
 if (process.env.MONGODB_URI) {
