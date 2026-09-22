@@ -343,6 +343,12 @@ html[data-theme='dark'] .dedicated-story { background: #294438; }
 .verification-card { width: min(430px, 100%); margin: auto; }
 html[data-theme='dark'] .auth-gate { background: #17291f; }
 html[data-theme='dark'] .auth-panel { background: rgba(31,55,43,.9); border-color: #466050; }
+html[data-theme='dark'] .auth-intro .eyebrow,
+html[data-theme='dark'] .auth-intro h1,
+html[data-theme='dark'] .auth-intro h1 em,
+html[data-theme='dark'] .auth-intro > p,
+html[data-theme='dark'] .auth-proof span,
+html[data-theme='dark'] .auth-proof small { color: #eef4ed; }
 html[data-theme='dark'] .auth-card { background: #eff3ed; border-color: #b8cbb9; }
 @media (max-width: 760px) {
   .auth-gate { display: block; padding: 0; }
