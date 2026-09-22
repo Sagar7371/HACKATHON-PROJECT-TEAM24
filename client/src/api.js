@@ -15,6 +15,8 @@ export async function getSkills(filters = {}) {
   return Array.isArray(data) ? { items: data, page: 1, total: data.length, hasMore: false } : data;
 }
 
+export async function getPeople(filters = {}) { const params = new URLSearchParams(filters); const response = await fetch(`${API_URL}/profiles?${params}`); return readResponse(response, 'Could not load people'); }
+
 export async function createProfile(profile) {
   try {
     const response = await fetch(`${API_URL}/profiles`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(profile) });

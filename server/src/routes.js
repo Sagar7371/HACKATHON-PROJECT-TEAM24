@@ -75,6 +75,14 @@ function publicProfile(profile) {
   return safeProfile;
 }
 
+function isDiscoverableProfile(profile) {
+  return profile.email !== 'demo@gmail.com' && profile.emailVerified && profile.profileVisible !== false;
+}
+
+function discoverableProfileQuery() {
+  return { emailVerified: true, profileVisible: { $ne: false }, email: { $ne: 'demo@gmail.com' } };
+}
+
 router.get('/health', (_request, response) => response.json({ ok: true, mode: process.env.MONGODB_URI ? 'mongodb-ready' : 'memory' }));
 
 router.post('/auth/send-verification', (request, response) => {
@@ -112,22 +120,59 @@ router.get('/profiles/:email/public', async (request, response) => {
   if (!process.env.MONGODB_URI) {
     const profile = readProfiles().find((item) => item.email === email);
     if (!profile) return response.status(404).json({ message: 'Profile not found.' });
-    if (profile.profileVisible === false) return response.status(403).json({ message: 'This profile is private.' });
+    if (!isDiscoverableProfile(profile)) return response.status(404).json({ message: 'Profile not found.' });
     return response.json({ ...publicProfile(profile), email: undefined });
   }
-  const profile = await Profile.findOne({ email });
+  const profile = await Profile.findOne({ ...discoverableProfileQuery(), email });
   if (!profile) return response.status(404).json({ message: 'Profile not found.' });
   const safe = publicProfile(profile);
   delete safe.email;
   return response.json(safe);
 });
 
+router.get('/profiles', async (request, response) => {
+  const { search = '', location = '' } = request.query;
+  const normalizedSearch = search.trim().toLowerCase();
+  const normalizedLocation = location.trim().toLowerCase();
+  if (!process.env.MONGODB_URI) {
+    const profiles = readProfiles().filter(isDiscoverableProfile);
+    return response.json(profiles.filter((profile) => {
+      const text = `${profile.name} ${profile.bio || ''} ${(profile.teaches || []).join(' ')} ${(profile.wants || []).join(' ')}`.toLowerCase();
+      return (!normalizedSearch || text.includes(normalizedSearch)) && (!normalizedLocation || (profile.location || '').toLowerCase().includes(normalizedLocation));
+    }).map(publicProfile));
+  }
+  const query = discoverableProfileQuery();
+  if (normalizedSearch) query.$or = [{ name: { $regex: normalizedSearch, $options: 'i' } }, { bio: { $regex: normalizedSearch, $options: 'i' } }, { teaches: { $regex: normalizedSearch, $options: 'i' } }, { wants: { $regex: normalizedSearch, $options: 'i' } }];
+  if (normalizedLocation) query.location = { $regex: normalizedLocation, $options: 'i' };
+  const profiles = await Profile.find(query).select('-passwordHash').sort({ createdAt: -1 }).limit(100);
+  return response.json(profiles.map(publicProfile));
+});
+
+function profileSkills(profiles) {
+  return profiles.flatMap((profile) => (profile.teaches || []).filter(Boolean).map((title, index) => ({
+    _id: `profile-skill-${profile._id || profile.email}-${index}`,
+    title,
+    category: 'Community skills',
+    level: 'All levels',
+    format: 'Flexible',
+    description: profile.bio || `${profile.name} is open to sharing ${title}.`,
+    teacher: { name: profile.name, email: profile.email, role: 'Community member', avatar: profile.avatar || profile.name.slice(0, 2).toUpperCase(), location: profile.location || 'Location not shared', rating: profile.rating || 0, exchanges: profile.exchanges || 0 },
+    wants: profile.wants?.length ? `I want to learn ${profile.wants.join(', ')}` : 'Open to a useful skill exchange',
+    color: ['#dbe8de', '#efe1c5', '#d9e5ed'][index % 3],
+    availability: 'Flexible'
+  })));
+}
+
 router.get('/skills', async (request, response) => {
   const { category, search, teach, wants, location, format, level, availability, page = 1, limit = 8, sort = 'newest' } = request.query;
   const pageNumber = Math.max(1, Number(page));
   const pageSize = Math.min(24, Math.max(1, Number(limit)));
+  const genuineProfiles = process.env.MONGODB_URI
+    ? await Profile.find(discoverableProfileQuery()).select('-passwordHash').limit(500)
+    : readProfiles().filter(isDiscoverableProfile);
+  const availableSkills = profileSkills(genuineProfiles);
   if (!process.env.MONGODB_URI) {
-    const filtered = localSkills.filter((skill) => {
+    const filtered = availableSkills.filter((skill) => {
       const matchesCategory = !category || category === 'All' || skill.category === category;
       const wantsMatch = !search || skill.wants.toLowerCase().includes(search.toLowerCase()) || skill.title.toLowerCase().includes(search.toLowerCase()) || skill.teacher.name.toLowerCase().includes(search.toLowerCase()) || skill.teacher.role.toLowerCase().includes(search.toLowerCase()) || skill.category.toLowerCase().includes(search.toLowerCase());
       const teachMatch = !teach || skill.title.toLowerCase().includes(teach.toLowerCase()) || skill.description.toLowerCase().includes(teach.toLowerCase());
@@ -141,27 +186,20 @@ router.get('/skills', async (request, response) => {
     const sorted = [...filtered].sort((first, second) => sort === 'rating' ? second.teacher.rating - first.teacher.rating : sort === 'newest' ? String(second._id).localeCompare(String(first._id)) : 0);
     return response.json({ items: sorted.slice((pageNumber - 1) * pageSize, pageNumber * pageSize), page: pageNumber, limit: pageSize, total: sorted.length, hasMore: pageNumber * pageSize < sorted.length });
   }
-  const query = {};
-  if (category && category !== 'All') query.category = category;
-  if (search) query.$or = [{ title: { $regex: search, $options: 'i' } }, { wants: { $regex: search, $options: 'i' } }, { category: { $regex: search, $options: 'i' } }, { 'teacher.name': { $regex: search, $options: 'i' } }, { 'teacher.role': { $regex: search, $options: 'i' } }];
-  else if (wants) query.wants = { $regex: wants, $options: 'i' };
-  if (teach) {
-    const teachQuery = { $or: [{ title: { $regex: teach, $options: 'i' } }, { description: { $regex: teach, $options: 'i' } }] };
-    if (query.$or) { query.$and = [{ $or: query.$or }, teachQuery]; delete query.$or; } else query.$or = teachQuery.$or;
-  }
-  if (format) query.format = { $regex: format, $options: 'i' };
-  if (level) query.level = level;
-  if (location) query['teacher.location'] = { $regex: location, $options: 'i' };
-  const total = await Skill.countDocuments(query);
-  const items = await Skill.find(query).sort(sort === 'rating' ? { 'teacher.rating': -1 } : { createdAt: -1 }).skip((pageNumber - 1) * pageSize).limit(pageSize);
-  return response.json({ items, page: pageNumber, limit: pageSize, total, hasMore: pageNumber * pageSize < total });
+  const filtered = availableSkills.filter((skill) => {
+    const text = `${skill.title} ${skill.description} ${skill.teacher.name} ${skill.wants} ${skill.category}`.toLowerCase();
+    return (!category || category === 'All' || skill.category === category || category === 'Community skills') && (!search || text.includes(search.toLowerCase())) && (!teach || skill.title.toLowerCase().includes(teach.toLowerCase())) && (!wants || skill.wants.toLowerCase().includes(wants.toLowerCase())) && (!location || skill.teacher.location.toLowerCase().includes(location.toLowerCase())) && (!format || skill.format.toLowerCase().includes(format.toLowerCase())) && (!level || skill.level === level);
+  });
+  const sorted = [...filtered].sort((first, second) => sort === 'rating' ? second.teacher.rating - first.teacher.rating : sort === 'newest' ? String(second._id).localeCompare(String(first._id)) : 0);
+  return response.json({ items: sorted.slice((pageNumber - 1) * pageSize, pageNumber * pageSize), page: pageNumber, limit: pageSize, total: sorted.length, hasMore: pageNumber * pageSize < sorted.length });
 });
 
 router.get('/recommendations/:email', (request, response) => {
   const email = decodeURIComponent(request.params.email).toLowerCase();
   const profile = readProfiles().find((item) => item.email === email);
   const interests = profile?.wants?.join(' ').toLowerCase() || '';
-  const recommendations = localSkills.filter((skill) => interests && `${skill.title} ${skill.category} ${skill.wants}`.toLowerCase().split(' ').some((word) => word.length > 3 && interests.includes(word))).slice(0, 6);
+  const profiles = readProfiles().filter(isDiscoverableProfile);
+  const recommendations = profileSkills(profiles).filter((skill) => interests && `${skill.title} ${skill.category} ${skill.wants}`.toLowerCase().split(' ').some((word) => word.length > 3 && interests.includes(word))).slice(0, 6);
   return response.json(recommendations);
 });
 
@@ -169,7 +207,7 @@ router.get('/profiles/:email/similar', (request, response) => {
   const email = decodeURIComponent(request.params.email).toLowerCase();
   const profile = readProfiles().find((item) => item.email === email);
   const interests = [...(profile?.teaches || []), ...(profile?.wants || [])].map((item) => item.toLowerCase());
-  const similar = readProfiles().filter((item) => item.email !== email && [...(item.teaches || []), ...(item.wants || [])].some((skill) => interests.some((interest) => skill.toLowerCase().includes(interest)))).slice(0, 6).map(publicProfile);
+  const similar = readProfiles().filter((item) => isDiscoverableProfile(item) && item.email !== email && [...(item.teaches || []), ...(item.wants || [])].some((skill) => interests.some((interest) => skill.toLowerCase().includes(interest)))).slice(0, 6).map(publicProfile);
   return response.json(similar);
 });
 
@@ -178,7 +216,8 @@ router.get('/matching/:email', (request, response) => {
   const profile = readProfiles().find((item) => item.email === email);
   const wants = (profile?.wants || []).map((item) => item.toLowerCase());
   const teaches = (profile?.teaches || []).map((item) => item.toLowerCase());
-  const matches = localSkills.map((skill) => { const text = `${skill.title} ${skill.category} ${skill.wants}`.toLowerCase(); const teachScore = teaches.filter((item) => text.includes(item)).length; const learnScore = wants.filter((item) => text.includes(item)).length; return { skill, matchScore: Math.min(99, 45 + (teachScore * 15) + (learnScore * 20)) }; }).filter((item) => item.matchScore > 45).sort((first, second) => second.matchScore - first.matchScore).slice(0, 8);
+  const profiles = readProfiles().filter(isDiscoverableProfile);
+  const matches = profileSkills(profiles).map((skill) => { const text = `${skill.title} ${skill.category} ${skill.wants}`.toLowerCase(); const teachScore = teaches.filter((item) => text.includes(item)).length; const learnScore = wants.filter((item) => text.includes(item)).length; return { skill, matchScore: Math.min(99, 45 + (teachScore * 15) + (learnScore * 20)) }; }).filter((item) => item.matchScore > 45).sort((first, second) => second.matchScore - first.matchScore).slice(0, 8);
   return response.json(matches);
 });
 
@@ -194,7 +233,7 @@ router.put('/profiles/:id/portfolio', (request, response) => {
 });
 
 router.get('/leaderboard', (request, response) => {
-  const leaderboard = readProfiles().map((profile) => ({ name: profile.name, avatar: profile.avatar, exchanges: profile.exchanges || 0, rating: profile.rating || 0, verified: profile.verified || false })).sort((first, second) => (second.exchanges - first.exchanges) || (second.rating - first.rating)).slice(0, 20);
+  const leaderboard = readProfiles().filter(isDiscoverableProfile).map((profile) => ({ name: profile.name, avatar: profile.avatar, exchanges: profile.exchanges || 0, rating: profile.rating || 0, verified: profile.verified || false })).sort((first, second) => (second.exchanges - first.exchanges) || (second.rating - first.rating)).slice(0, 20);
   return response.json(leaderboard);
 });
 

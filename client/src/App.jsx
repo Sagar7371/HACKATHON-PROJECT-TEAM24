@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ArrowDown, ArrowLeftRight, ArrowUp, ArrowUpRight, Award, Bell, Bookmark, BriefcaseBusiness, CalendarDays, Check, CheckCircle2, ChevronDown, Clock3, Eye, EyeOff, Languages, Menu, MessageCircle, Moon, Search, Settings, Share2, ShieldCheck, Sparkles, Star, Sun, Target, Repeat2, UserRound, UsersRound, Video, X, XCircle } from 'lucide-react';
-import { blockUser, changePassword, createProfile, createVideoRoom, deleteAccount, forgotPassword, getGroups, getLeaderboard, getMessages, getNotifications, getRecommendations, getSkillMatches, getSkills, joinGroup, loginProfile, markMessageRead, markNotificationsRead, reportUser, resetPassword, scheduleExchange, sendMessage, sendVerification, updatePortfolio, updateProfile, verifyEmail } from './api';
+import { blockUser, changePassword, createProfile, createVideoRoom, deleteAccount, forgotPassword, getGroups, getLeaderboard, getMessages, getNotifications, getPeople, getRecommendations, getSkillMatches, getSkills, joinGroup, loginProfile, markMessageRead, markNotificationsRead, reportUser, resetPassword, scheduleExchange, sendMessage, sendVerification, updatePortfolio, updateProfile, verifyEmail } from './api';
 import { connectChat } from './socket';
 
 const categories = ['All', 'Technology', 'Creative', 'Food & home', 'Wellbeing'];
@@ -13,6 +13,7 @@ const people = [
 function App() {
   const [skills, setSkills] = useState([]);
   const [allSkills, setAllSkills] = useState([]);
+  const [peopleDirectory, setPeopleDirectory] = useState([]);
   const [category, setCategory] = useState('All');
     const [search, setSearch] = useState('');
   const [teachQuery, setTeachQuery] = useState('');
@@ -137,6 +138,7 @@ function App() {
   useEffect(() => { setPage(1); }, [category, search, teachQuery, wantsQuery, location, format, level, availability, sort]);
   useEffect(() => { let cancelled = false; setSkillsLoading(true); setSkillsError(''); getSkills({ category, search, teach: teachQuery, wants: wantsQuery, location, format, level, availability, sort, page, limit: 8 }).then((result) => { if (!cancelled) { setSkills((current) => page === 1 ? result.items : [...current, ...result.items]); setHasMore(result.hasMore); } }).catch(() => { if (!cancelled) { setSkills([]); setSkillsError('We could not load the exchange board.'); } }).finally(() => { if (!cancelled) setSkillsLoading(false); }); return () => { cancelled = true; }; }, [category, search, teachQuery, wantsQuery, location, format, level, availability, sort, page]);
   useEffect(() => { getSkills({ category: 'All', search: '', page: 1, limit: 24 }).then((result) => setAllSkills(result.items)).catch(() => setAllSkills([])); }, []);
+  useEffect(() => { getPeople().then((profiles) => setPeopleDirectory(profiles.map((profile) => ({ ...profile, role: profile.teaches?.[0] || 'Community member', city: profile.location || 'Location not shared', skills: profile.teaches?.join(' · ') || 'Learning in public', wants: profile.wants?.join(' · ') || 'Open to a useful exchange', initials: profile.name?.slice(0, 2).toUpperCase(), color: '#dbe8de', rating: profile.rating || 0, exchanges: profile.exchanges || 0, responseTime: 'Replies when available', availability: 'Flexible', format: 'Flexible', verified: profile.emailVerified || profile.verified, lastActive: 'Recently joined' })))).catch(() => setPeopleDirectory([])); }, []);
   useEffect(() => { if (!currentUser?.email) return undefined; getMessages(currentUser.email).then((items) => setUnreadMessages(items.filter((item) => !item.read && item.recipientEmail === currentUser.email).length)).catch(() => setUnreadMessages(0)); getNotifications(currentUser.email).then(setNotificationHistory).catch(() => setNotificationHistory([])); return undefined; }, [currentUser?.email]);
   useEffect(() => { if (!toast) return undefined; const timer = window.setTimeout(() => setToast(''), 2800); return () => window.clearTimeout(timer); }, [toast]);
   useEffect(() => {
@@ -150,7 +152,7 @@ function App() {
 
   const sortedSkills = [...skills].sort((first, second) => sort === 'rating' ? second.teacher.rating - first.teacher.rating : sort === 'newest' ? String(second._id).localeCompare(String(first._id)) : sort === 'nearby' && location ? Number(second.teacher.location.toLowerCase().includes(location.toLowerCase())) - Number(first.teacher.location.toLowerCase().includes(location.toLowerCase())) : 0);
   const recommendedSkills = currentUser?.wants?.length ? allSkills.filter((skill) => currentUser.wants.some((want) => `${skill.title} ${skill.category} ${skill.wants}`.toLowerCase().includes(want.toLowerCase()))).slice(0, 3) : [];
-  const similarPeople = currentUser?.teaches?.length ? people.filter((person) => currentUser.teaches.some((skill) => person.skills.toLowerCase().includes(skill.toLowerCase())) || currentUser.wants?.some((skill) => person.skills.toLowerCase().includes(skill.toLowerCase()))) : people;
+  const similarPeople = currentUser?.teaches?.length ? peopleDirectory.filter((person) => currentUser.teaches.some((skill) => person.skills.toLowerCase().includes(skill.toLowerCase())) || currentUser.wants?.some((skill) => person.skills.toLowerCase().includes(skill.toLowerCase()))) : peopleDirectory;
 
   const scrollTo = (id) => {
     setActivePage(null);
