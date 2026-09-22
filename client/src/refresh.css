@@ -85,8 +85,8 @@ html[data-theme='dark'] .skill-detail-facts span { background: #e0e9df; }
 .people-profile-facts strong { display: inline-flex; align-items: center; gap: 3px; color: var(--forest); font-size: 11px; }
 .people-profile-section { display: grid; gap: 8px; margin-top: 20px; padding-top: 16px; border-top: 1px solid #d7ddd4; }
 .people-profile-section p { margin: 0; color: #68716b; font-size: 11px; line-height: 1.5; }
-html[data-theme='dark'] .people-directory-toolbar input, html[data-theme='dark'] .people-directory-toolbar select { background: #eff3ed; }
-html[data-theme='dark'] .person-directory-card { background: #eff3ed; }
+html[data-theme='dark'] .people-directory-toolbar input, html[data-theme='dark'] .people-directory-toolbar select { background: #162f29; border-color: #466050; color: #eef4ed; }
+html[data-theme='dark'] .person-directory-card { background: #182c24; border-color: #365347; color: #eef4ed; }
 @media (max-width: 900px) { .people-directory-toolbar { grid-template-columns: repeat(3, 1fr); } .people-directory-toolbar .search-box { grid-column: span 3; } .people-directory-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 640px) { .people-directory-toolbar { grid-template-columns: 1fr 1fr; } .people-directory-toolbar .search-box { grid-column: span 2; } .people-directory-grid { grid-template-columns: 1fr; } .people-profile-facts { grid-template-columns: 1fr 1fr; } }
 .dedicated-steps { margin-top: 48px; }
@@ -329,15 +329,20 @@ html[data-theme='dark'] .dedicated-panels > div { background: #eff3ed; color: va
 html[data-theme='dark'] .dedicated-story { background: #294438; }
 html[data-theme='dark'] .dedicated-page-people { background: #101b17; }
 html[data-theme='dark'] .dedicated-page-people .people-directory-toolbar input,
-html[data-theme='dark'] .dedicated-page-people .people-directory-toolbar select { background: #162f29; border-color: #466050; color: #eef4ed; }
+html[data-theme='dark'] .dedicated-page-people .people-directory-toolbar select { background: #162f29 !important; border-color: #466050; color: #eef4ed; }
 html[data-theme='dark'] .dedicated-page-people .people-directory-toolbar input::placeholder { color: #9fb7a5; }
-html[data-theme='dark'] .dedicated-page-people .person-directory-card { background: linear-gradient(180deg, #1c332a, #15261f); border-color: #365347; box-shadow: 0 3px 0 rgba(7, 14, 10, .7); }
+html[data-theme='dark'] .dedicated-page-people .person-directory-card { background: linear-gradient(180deg, #1c332a, #15261f) !important; border-color: #365347; box-shadow: 0 3px 0 rgba(7, 14, 10, .7); }
 html[data-theme='dark'] .dedicated-page-people .person-directory-card:hover { transform: none; box-shadow: 0 7px 0 rgba(217, 237, 103, .35); }
 html[data-theme='dark'] .dedicated-page-people .person-directory-main h3 { color: #eef4ed; }
 html[data-theme='dark'] .dedicated-page-people .person-directory-main p,
 html[data-theme='dark'] .dedicated-page-people .person-directory-main > small,
 html[data-theme='dark'] .dedicated-page-people .person-directory-meta,
 html[data-theme='dark'] .dedicated-page-people .person-directory-wants { color: #c7d6ca; }
+html[data-theme='dark'] .dedicated-page-people .person-directory-main h3,
+html[data-theme='dark'] .dedicated-page-people .person-directory-main h3 .verified-badge,
+html[data-theme='dark'] .dedicated-page-people .person-save { color: #eef4ed; }
+html[data-theme='dark'] .dedicated-page-people .person-directory-wants b,
+html[data-theme='dark'] .dedicated-page-people .person-directory-meta span:first-child { color: #e89473; }
 html[data-theme='dark'] .dedicated-page-people .person-directory-skills span { background: #2b493c; color: #dce9dc; }
 html[data-theme='dark'] .dedicated-page-people .match-score { background: #315442; color: #dce9dc; }
 html[data-theme='dark'] .dedicated-page-people .person-directory-wants,
